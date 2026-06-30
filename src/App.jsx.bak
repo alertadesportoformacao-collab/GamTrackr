@@ -1,0 +1,49 @@
+import { useEffect, useState } from 'react'
+import { supabase } from './supabaseClient'
+
+function App() {
+  const [session, setSession] = useState(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [games, setGames] = useState([])
+  const [eventTypes, setEventTypes] = useState([])
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) return
+    async function loadData() {
+      const { data: gamesData } = await supabase.from('games').select('*, teams(name)')
+      const { data: eventTypesData } = await supabase.from('event_types').select('*').order('sort_order')
+      setGames(gamesData || [])
+      setEventTypes(eventTypesData || [])
+    }
+    loadData()
+  }, [session])
+
+  async function handleLogin(e) {
+    e.preventDefault()
+    setLoginError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) setLoginError(error.message)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+  }
+
+  if (!session) {
+    return (
+      <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: 320 }}>
+        <h1>GamTrackr</h1>
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: '1rem' }}>
+            <input
+              type="email"
