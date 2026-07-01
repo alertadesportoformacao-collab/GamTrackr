@@ -391,7 +391,7 @@ export function EventTypesManager() {
   }
 
   const badgeStyle = (colors) => ({
-    fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+    fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap',
     background: colors.bg, color: colors.color, border: `1px solid ${colors.border}`,
   })
 
@@ -478,8 +478,8 @@ export function EventTypesManager() {
                   <thead><tr>
                     <th style={{ width: 36 }} className="col-center">Cor</th>
                     <th>Nome</th>
-                    <th style={{ width: 100 }}>Tipo</th>
-                    <th style={{ width: 90 }}>Modo</th>
+                    <th style={{ width: 100, whiteSpace: 'nowrap' }}>Tipo</th>
+                    <th style={{ width: 100, whiteSpace: 'nowrap' }}>Modo</th>
                     <th className="col-center" style={{ width: 70 }}>Jogador</th>
                     <th className="col-center" style={{ width: 70 }}>Estado</th>
                     <th className="col-right" style={{ width: 60 }}>Ordem</th>

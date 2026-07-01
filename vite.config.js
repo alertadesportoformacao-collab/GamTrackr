@@ -7,20 +7,25 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['gamtrakr-icon.png', 'gamtrakr-logo.png'],
       manifest: {
         name: 'GamTrackr',
         short_name: 'GamTrackr',
         description: 'Registo de eventos de jogo em tempo real',
-        theme_color: '#22C55E',
-        background_color: '#ffffff',
+        theme_color: '#0f2744',
+        background_color: '#0f2744',
         display: 'standalone',
         start_url: '/',
         icons: [
           {
-            src: 'favicon.svg',
+            src: 'gamtrakr-icon.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
+          },
+          {
+            src: 'gamtrakr-icon.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
         ],
       },

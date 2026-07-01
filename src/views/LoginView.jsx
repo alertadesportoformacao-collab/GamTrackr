@@ -51,17 +51,13 @@ export default function LoginView({ onLogin, loginError }) {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 mb-5 shadow-lg shadow-sky-500/10">
-            <svg viewBox="0 0 32 32" className="w-8 h-8" fill="none">
-              <circle cx="16" cy="16" r="13" stroke="#38bdf8" strokeWidth="2.5" />
-              <path d="M8 16h16M16 8v16" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="16" cy="16" r="4" fill="#38bdf8" opacity="0.3" />
-            </svg>
-          </div>
-          <h1 className="text-[2.6rem] font-black tracking-tight text-white leading-none">
-            Gam<span className="text-sky-400">Tr</span>akr
-          </h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium tracking-wide">Every Play. Every Moment.</p>
+          <img
+            src="/gamtrakr-logo.png"
+            alt="GamTrakr"
+            className="mx-auto mb-2 drop-shadow-[0_0_32px_rgba(56,189,248,0.35)]"
+            style={{ maxHeight: 90, width: 'auto' }}
+          />
+          <p className="text-slate-500 mt-3 text-sm font-medium tracking-wide">Every Play. Every Moment.</p>
         </div>
 
         {/* Card */}

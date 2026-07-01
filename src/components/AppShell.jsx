@@ -168,10 +168,8 @@ export default function AppShell({ profile, onLogout }) {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/[0.07] flex-shrink-0">
-          <span className="text-xl font-black tracking-tight">
-            Gam<span className="text-sky-400">Tr</span>akr
-          </span>
+        <div className="flex items-center justify-between px-4 h-16 border-b border-white/[0.07] flex-shrink-0">
+          <img src="/gamtrakr-icon.png" alt="GamTrakr" className="h-9 w-auto" />
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-500 hover:text-white">
             <X size={18} />
           </button>
