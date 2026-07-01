@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import AppShell from './components/AppShell'
 import LoginView from './views/LoginView'
+import { ThemeProvider } from './ThemeContext'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -68,4 +69,8 @@ function App() {
   )
 }
 
-export default App
+function AppWithTheme() {
+  return <ThemeProvider><App /></ThemeProvider>
+}
+
+export default AppWithTheme

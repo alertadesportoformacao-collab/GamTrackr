@@ -2,37 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme variables ──────────────────────────────────────────────────────── */
+:root {
+  --bg:   #070c14;  --bg-s: #0c1525;  --bg-c: #111827;  --bg-e: #1a2235;
+  --tx:   #f1f5f9;  --tx2:  #e2e8f0;  --tx3:  #94a3b8;  --tx4:  #64748b;  --tx5: #475569;
+  --bd:   rgba(255,255,255,0.07);
+  --bd2:  rgba(255,255,255,0.06);
+  --bd3:  rgba(255,255,255,0.10);
+  --bd4:  rgba(255,255,255,0.08);
+  --inp:  rgba(255,255,255,0.05);
+  --hv:   rgba(255,255,255,0.04);
+  --hv2:  rgba(255,255,255,0.08);
+  --hv3:  rgba(255,255,255,0.12);
+  --sub:  rgba(255,255,255,0.03);
+  --sub2: rgba(255,255,255,0.02);
+}
+html.light {
+  --bg:   #f0f4f8;  --bg-s: #ffffff;  --bg-c: #ffffff;  --bg-e: #f8fafc;
+  --tx:   #0f172a;  --tx2:  #1e293b;  --tx3:  #475569;  --tx4:  #64748b;  --tx5: #94a3b8;
+  --bd:   rgba(0,0,0,0.08);
+  --bd2:  rgba(0,0,0,0.06);
+  --bd3:  rgba(0,0,0,0.12);
+  --bd4:  rgba(0,0,0,0.08);
+  --inp:  rgba(0,0,0,0.04);
+  --hv:   rgba(0,0,0,0.03);
+  --hv2:  rgba(0,0,0,0.06);
+  --hv3:  rgba(0,0,0,0.10);
+  --sub:  rgba(0,0,0,0.02);
+  --sub2: rgba(0,0,0,0.02);
+}
+
+/* ── Shell nav item (theme-aware) ─────────────────────────────────────────── */
+.gt-nav-item {
+  width: 100%; display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem; border-radius: 0.75rem;
+  font-size: 0.875rem; font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer; background: none; text-align: left;
+  transition: background 0.12s, color 0.12s;
+  color: var(--tx4);
+}
+.gt-nav-item:hover:not(:disabled) { background: var(--hv); color: var(--tx); }
+.gt-nav-item:disabled { color: var(--tx5); cursor: not-allowed; }
+.gt-nav-item.active {
+  background: rgba(14,165,233,0.15); color: #38bdf8;
+  border-color: rgba(14,165,233,0.2);
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
   html, body, #root {
     height: 100%;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    max-width: 100%;
-    border: none;
-    text-align: initial;
+    margin: 0; padding: 0;
+    width: 100%; max-width: 100%;
+    border: none; text-align: initial;
   }
 
   body {
-    background: #070c14;
-    color: #f1f5f9;
+    background: var(--bg);
+    color: var(--tx);
     font-family: Inter, system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  #root {
-    display: flex;
-    flex-direction: column;
-  }
+  #root { display: flex; flex-direction: column; }
 
   h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: inherit; }
   p { margin: 0; }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  ::-webkit-scrollbar-thumb { background: var(--hv3); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.35); }
 }

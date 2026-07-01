@@ -5,6 +5,7 @@ import {
   Bell, Menu, X, ChevronRight,
 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { useTheme } from '../ThemeContext'
 import GameTrackView from '../views/GameTrackView'
 import Dashboard from '../views/Dashboard'
 import {
@@ -53,6 +54,7 @@ const PAGE_TITLES = {
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
 export default function AppShell({ profile, onLogout }) {
+  const { toggle, dark } = useTheme()
   const defaultTab = profile.role === 'club_opp' ? 'jogos' : 'dashboard'
   const [activeTab, setActiveTab]     = useState(defaultTab)
   const [selectedGame, setSelectedGame] = useState(null)
@@ -150,7 +152,7 @@ export default function AppShell({ profile, onLogout }) {
   }
 
   return (
-    <div className="flex h-[100dvh] bg-[#070c14] text-slate-100 overflow-hidden">
+    <div className="flex h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)', color: 'var(--tx)' }}>
 
       {/* ── Sidebar overlay (mobile) ── */}
       {sidebarOpen && (
@@ -161,23 +163,32 @@ export default function AppShell({ profile, onLogout }) {
       )}
 
       {/* ── Sidebar ── */}
-      <aside className={`
-        fixed md:static inset-y-0 left-0 z-40 w-64 flex flex-col
-        bg-[#0c1525] border-r border-white/[0.07]
-        transform transition-transform duration-200 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+      <aside
+        className={`
+          fixed md:static inset-y-0 left-0 z-40 w-64 flex flex-col
+          transform transition-transform duration-200 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{ background: 'var(--bg-s)', borderRight: '1px solid var(--bd)' }}
+      >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 h-16 border-b border-white/[0.07] flex-shrink-0">
-          <img src="/gamtrakr-icon.png" alt="GamTrakr" className="h-9 w-auto" />
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-500 hover:text-white">
+        <div
+          className="flex items-center justify-between px-4 h-16 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--bd)' }}
+        >
+          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ height: 32, width: 'auto' }} />
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+          >
             <X size={18} />
           </button>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-          {navItems.map((item, i) => {
+          {navItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
             const isClubOnly = item.clubOnly && profile.role === 'super_admin'
@@ -187,15 +198,23 @@ export default function AppShell({ profile, onLogout }) {
               <div key={item.id}>
                 {/* Section header */}
                 {item.section && (
-                  <div className="pt-4 pb-1.5 px-3">
-                    <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-600">
+                  <div className="pt-4 pb-1.5 px-1">
+                    <span
+                      className="text-[0.6rem] font-bold uppercase tracking-widest"
+                      style={{ color: 'var(--tx5)' }}
+                    >
                       {item.section}
                     </span>
                     {item.section === 'Gerir Clube' && profile.role === 'super_admin' && (
                       <select
                         value={managedClubId}
                         onChange={(e) => setManagedClubId(e.target.value)}
-                        className="mt-1.5 w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500/50"
+                        className="mt-1.5 w-full rounded-lg px-2.5 py-1.5 text-xs focus:outline-none"
+                        style={{
+                          background: 'var(--inp)',
+                          border: '1px solid var(--bd3)',
+                          color: 'var(--tx3)',
+                        }}
                       >
                         <option value="">Selecionar clube…</option>
                         {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -207,18 +226,11 @@ export default function AppShell({ profile, onLogout }) {
                 <button
                   onClick={() => !disabled && navigate(item.id)}
                   disabled={disabled}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                    ${isActive
-                      ? 'bg-sky-500/15 text-sky-400 border border-sky-500/20'
-                      : disabled
-                        ? 'text-slate-700 cursor-not-allowed'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'}
-                  `}
+                  className={`gt-nav-item${isActive ? ' active' : ''}`}
                 >
-                  <Icon size={17} className={isActive ? 'text-sky-400' : ''} />
+                  <Icon size={17} />
                   {item.label}
-                  {isActive && <ChevronRight size={14} className="ml-auto text-sky-400/60" />}
+                  {isActive && <ChevronRight size={14} className="ml-auto" style={{ color: 'rgba(56,189,248,0.6)' }} />}
                 </button>
               </div>
             )
@@ -226,16 +238,25 @@ export default function AppShell({ profile, onLogout }) {
         </nav>
 
         {/* User */}
-        <div className="border-t border-white/[0.07] p-3 flex-shrink-0">
+        <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--bd)' }}>
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
               {(profile.name || profile.email || '?')[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white truncate">{profile.name || 'Utilizador'}</div>
-              <div className="text-xs text-slate-500 truncate">{profile.email}</div>
+              <div className="text-sm font-semibold truncate" style={{ color: 'var(--tx)' }}>
+                {profile.name || 'Utilizador'}
+              </div>
+              <div className="text-xs truncate" style={{ color: 'var(--tx4)' }}>
+                {profile.email}
+              </div>
             </div>
-            <button onClick={onLogout} className="text-slate-500 hover:text-red-400 transition-colors" title="Sair">
+            <button
+              onClick={onLogout}
+              className="hover:text-red-400 transition-colors"
+              style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              title="Sair"
+            >
               <LogOut size={16} />
             </button>
           </div>
@@ -246,16 +267,25 @@ export default function AppShell({ profile, onLogout }) {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
 
         {/* Header */}
-        <header className="h-14 flex items-center justify-between px-4 md:px-6 border-b border-white/[0.07] bg-[#0c1525]/80 backdrop-blur-sm flex-shrink-0">
+        <header
+          className="h-14 flex items-center justify-between px-4 md:px-6 backdrop-blur-sm flex-shrink-0"
+          style={{
+            background: dark ? 'rgba(12,21,37,0.85)' : 'rgba(255,255,255,0.9)',
+            borderBottom: '1px solid var(--bd)',
+          }}
+        >
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden text-slate-400 hover:text-white transition-colors mr-1"
+              className="md:hidden transition-colors mr-1"
+              style={{ color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
             >
               <Menu size={20} />
             </button>
-            <h1 className="text-base font-bold text-white">{PAGE_TITLES[activeTab] || ''}</h1>
+            <h1 className="text-base font-bold" style={{ color: 'var(--tx)' }}>
+              {PAGE_TITLES[activeTab] || ''}
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
@@ -265,7 +295,20 @@ export default function AppShell({ profile, onLogout }) {
               <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
             </span>
 
-            <button className="relative text-slate-500 hover:text-white transition-colors">
+            {/* Theme toggle */}
+            <button
+              onClick={toggle}
+              title={dark ? 'Modo claro' : 'Modo escuro'}
+              style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: 2 }}
+              className="hover:opacity-80 transition-opacity"
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
+
+            <button
+              className="relative transition-colors hover:opacity-80"
+              style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+            >
               <Bell size={18} />
             </button>
 
@@ -282,7 +325,10 @@ export default function AppShell({ profile, onLogout }) {
         </main>
 
         {/* ── Mobile bottom nav ── */}
-        <nav className="md:hidden flex border-t border-white/[0.07] bg-[#0c1525] flex-shrink-0 safe-area-bottom">
+        <nav
+          className="md:hidden flex flex-shrink-0 safe-area-bottom"
+          style={{ borderTop: '1px solid var(--bd)', background: 'var(--bg-s)' }}
+        >
           {navItems.slice(0, 5).map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
@@ -290,9 +336,11 @@ export default function AppShell({ profile, onLogout }) {
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[0.6rem] font-semibold transition-colors ${
-                  isActive ? 'text-sky-400' : 'text-slate-600 hover:text-slate-400'
-                }`}
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[0.6rem] font-semibold transition-colors"
+                style={{
+                  color: isActive ? '#38bdf8' : 'var(--tx5)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                }}
               >
                 <Icon size={20} />
                 {item.label.split(' ')[0]}
@@ -327,7 +375,7 @@ function ClubOppGames({ clubId, onSelectGame }) {
     <div className="admin-card">
       <div className="admin-card-header">
         <h2 className="admin-card-title">Jogos</h2>
-        <span className="text-xs text-slate-500">{games.length} jogo{games.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs" style={{ color: 'var(--tx4)' }}>{games.length} jogo{games.length !== 1 ? 's' : ''}</span>
       </div>
       {games.length === 0 ? (
         <div className="admin-empty">Não há jogos disponíveis.</div>
@@ -370,8 +418,8 @@ function ClubOppGames({ clubId, onSelectGame }) {
 function ClubRequired() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center py-20 px-4">
-      <Building2 size={40} className="text-slate-700 mb-4" />
-      <p className="text-slate-500 text-sm">Seleciona um clube na barra lateral para gerir os seus dados.</p>
+      <Building2 size={40} className="mb-4" style={{ color: 'var(--tx5)' }} />
+      <p className="text-sm" style={{ color: 'var(--tx4)' }}>Seleciona um clube na barra lateral para gerir os seus dados.</p>
     </div>
   )
 }

@@ -1,25 +1,25 @@
-/* ── Base (dark) ───────────────────────────────────────────────────────────── */
+/* ── Base ───────────────────────────────────────────────────────────────────── */
 .admin-shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #070c14;
+  background: var(--bg);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  color: #f1f5f9;
+  color: var(--tx);
 }
 
 /* ── Header ───────────────────────────────────────────────────────────────── */
 .admin-header {
-  background: #0c1525;
-  color: #f1f5f9;
+  background: var(--bg-s);
+  color: var(--tx);
   height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid var(--bd);
   z-index: 10;
 }
 
@@ -33,7 +33,7 @@
   font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #f1f5f9;
+  color: var(--tx);
 }
 
 .admin-role-badge {
@@ -63,8 +63,8 @@
 
 .admin-sidebar {
   width: 220px;
-  background: #0c1525;
-  border-right: 1px solid rgba(255,255,255,0.07);
+  background: var(--bg-s);
+  border-right: 1px solid var(--bd);
   padding: 1.25rem 0;
   flex-shrink: 0;
   display: flex;
@@ -77,7 +77,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #475569;
+  color: var(--tx5);
   margin-top: 0.5rem;
 }
 
@@ -87,7 +87,7 @@
   gap: 0.6rem;
   padding: 0.6rem 1.25rem;
   cursor: pointer;
-  color: #64748b;
+  color: var(--tx4);
   font-size: 0.875rem;
   font-weight: 500;
   border: none;
@@ -99,8 +99,8 @@
 }
 
 .admin-nav-item:hover {
-  background: rgba(255,255,255,0.04);
-  color: #e2e8f0;
+  background: var(--hv);
+  color: var(--tx2);
 }
 
 .admin-nav-item.active {
@@ -126,15 +126,15 @@
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
 .admin-card {
-  background: #111827;
+  background: var(--bg-c);
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--bd2);
   overflow: hidden;
 }
 
 .admin-card-header {
   padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--bd2);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -143,7 +143,7 @@
 .admin-card-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--tx);
   margin: 0;
 }
 
@@ -158,8 +158,8 @@
   flex-wrap: wrap;
   align-items: flex-end;
   padding: 1rem 1.5rem;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--sub2);
+  border-bottom: 1px solid var(--bd2);
 }
 
 .admin-field {
@@ -180,7 +180,7 @@
 .admin-label {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--tx4);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -188,11 +188,11 @@
 .admin-input,
 .admin-select {
   padding: 0.55rem 0.8rem;
-  border: 1.5px solid rgba(255,255,255,0.1);
+  border: 1.5px solid var(--bd3);
   border-radius: 8px;
   font-size: 0.9rem;
-  color: #f1f5f9;
-  background: rgba(255,255,255,0.05);
+  color: var(--tx);
+  background: var(--inp);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   font-family: inherit;
@@ -201,8 +201,8 @@
 }
 
 .admin-select option {
-  background: #1a2235;
-  color: #f1f5f9;
+  background: var(--bg-e);
+  color: var(--tx);
 }
 
 .admin-input:focus,
@@ -212,7 +212,7 @@
 }
 
 .admin-input::placeholder {
-  color: #475569;
+  color: var(--tx5);
 }
 
 /* ── Validation ───────────────────────────────────────────────────────────── */
@@ -251,11 +251,11 @@
 .admin-color-input {
   width: 48px;
   height: 36px;
-  border: 1.5px solid rgba(255,255,255,0.1);
+  border: 1.5px solid var(--bd3);
   border-radius: 6px;
   padding: 2px;
   cursor: pointer;
-  background: rgba(255,255,255,0.05);
+  background: var(--inp);
 }
 
 .admin-form-actions {
@@ -294,11 +294,11 @@
 .btn-primary:hover:not(:disabled)   { background: #38bdf8; }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.07);
-  color: #94a3b8;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--hv);
+  color: var(--tx3);
+  border: 1px solid var(--bd3);
 }
-.btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+.btn-secondary:hover:not(:disabled) { background: var(--hv3); color: var(--tx2); }
 
 .btn-danger    { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
 .btn-danger:hover:not(:disabled)    { background: rgba(239,68,68,0.2); }
@@ -306,8 +306,8 @@
 .btn-success   { background: #16a34a; color: white; }
 .btn-success:hover:not(:disabled)   { filter: brightness(1.1); }
 
-.btn-ghost     { background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); }
-.btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.14); }
+.btn-ghost     { background: var(--hv2); color: var(--tx2); border: 1px solid var(--hv3); }
+.btn-ghost:hover:not(:disabled) { background: var(--hv3); }
 
 .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
 
@@ -325,8 +325,8 @@
 }
 
 .admin-table thead tr {
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--sub);
+  border-bottom: 1px solid var(--bd4);
 }
 
 .admin-table th {
@@ -335,7 +335,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: var(--tx4);
   text-align: left;
   white-space: nowrap;
   user-select: none;
@@ -352,7 +352,7 @@
 }
 
 .admin-table tbody tr {
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--hv);
   transition: background 0.1s;
 }
 
@@ -361,12 +361,12 @@
 }
 
 .admin-table tbody tr:hover {
-  background: rgba(255,255,255,0.03) !important;
+  background: var(--sub) !important;
 }
 
 .admin-table td {
   padding: 0.72rem 1rem;
-  color: #94a3b8;
+  color: var(--tx3);
   vertical-align: middle;
 }
 
@@ -382,19 +382,19 @@
 
 .admin-table .cell-primary {
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--tx2);
 }
 
 .admin-table .cell-muted {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx4);
 }
 
 /* ── Form section ─────────────────────────────────────────────────────────── */
 .admin-form-section {
   padding: 1.25rem 1.5rem;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 2px solid rgba(255,255,255,0.06);
+  background: var(--sub2);
+  border-bottom: 2px solid var(--bd2);
   border-left: 3px solid transparent;
   transition: border-left-color 0.2s;
 }
@@ -430,14 +430,14 @@
   gap: 0.5rem;
   padding-top: 0.875rem;
   margin-top: 0.875rem;
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid var(--bd);
 }
 
 /* ── Filter bar ───────────────────────────────────────────────────────────── */
 .admin-filter-bar {
   padding: 0.85rem 1.5rem;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--sub2);
+  border-bottom: 1px solid var(--bd2);
   display: flex;
   align-items: flex-end;
   gap: 1rem;
@@ -446,7 +446,7 @@
 /* ── List (legacy) ──────────────────────────────────────────────────────── */
 .admin-list-sub {
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--tx4);
   font-weight: 400;
   margin-left: 0.35rem;
 }
@@ -457,7 +457,7 @@
   height: 14px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 1.5px solid rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(128,128,128,0.3);
   display: inline-block;
 }
 
@@ -465,7 +465,7 @@
 .admin-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: #475569;
+  color: var(--tx5);
   font-size: 0.875rem;
 }
 
@@ -501,7 +501,7 @@
 .admin-prompt {
   text-align: center;
   padding: 4rem 1rem;
-  color: #475569;
+  color: var(--tx5);
 }
 
 .admin-prompt p {
@@ -525,7 +525,7 @@
   .admin-sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid var(--bd);
     padding: 0;
     flex-direction: row;
     overflow-x: auto;

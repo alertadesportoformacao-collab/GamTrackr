@@ -55,7 +55,7 @@ export default function LoginView({ onLogin, loginError }) {
             src="/gamtrakr-logo.png"
             alt="GamTrakr"
             className="mx-auto mb-2 drop-shadow-[0_0_32px_rgba(56,189,248,0.35)]"
-            style={{ maxHeight: 90, width: 'auto' }}
+            style={{ maxHeight: 140, width: 'auto' }}
           />
           <p className="text-slate-500 mt-3 text-sm font-medium tracking-wide">Every Play. Every Moment.</p>
         </div>
