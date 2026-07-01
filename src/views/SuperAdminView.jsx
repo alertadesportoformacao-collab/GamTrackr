@@ -171,7 +171,7 @@ function ModalFooter({ onCancel, onSave, saving, saveLabel = 'Guardar' }) {
 
 // ── Clubes ────────────────────────────────────────────────────────────────────
 
-function ClubsManager({ onClubsChange }) {
+export function ClubsManager({ onClubsChange }) {
   const [clubs, setClubs] = useState([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -244,7 +244,7 @@ function ClubsManager({ onClubsChange }) {
 
 // ── Modalidades ───────────────────────────────────────────────────────────────
 
-function ModalitiesManager() {
+export function ModalitiesManager() {
   const [modalities, setModalities] = useState([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -317,7 +317,7 @@ function ModalitiesManager() {
 
 const EMPTY_ET = { name: '', color: '#3b82f6', sort_order: '', registro_tipo: 'realtime', requer_jogador: true }
 
-function EventTypesManager() {
+export function EventTypesManager() {
   const [eventTypes, setEventTypes] = useState([])
   const [modalities, setModalities] = useState([])
   const [selectedModalityId, setSelectedModalityId] = useState('')
@@ -479,13 +479,13 @@ function EventTypesManager() {
 
 const ROLE_LABELS = { super_admin: 'Super Admin', admin_club: 'Admin Club', club_opp: 'Club Opp' }
 const ROLE_STYLE  = {
-  super_admin: { background: '#fef3c7', color: '#92400e' },
-  admin_club:  { background: '#eff6ff', color: '#1d4ed8' },
-  club_opp:    { background: '#f0fdf4', color: '#166534' },
+  super_admin: { background: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
+  admin_club:  { background: 'rgba(56,189,248,0.12)', color: '#38bdf8' },
+  club_opp:    { background: 'rgba(52,211,153,0.12)', color: '#34d399' },
 }
 const EMPTY_USER = { name: '', email: '', password: '', role: 'admin_club', club_id: '' }
 
-function UsersManager() {
+export function UsersManager() {
   const [users, setUsers] = useState([])
   const [clubs, setClubs] = useState([])
   const [open, setOpen] = useState(false)

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
-import SuperAdminView from './views/SuperAdminView'
-import ClubAdminView from './views/ClubAdminView'
-import ClubOppView from './views/ClubOppView'
+import AppShell from './components/AppShell'
 import LoginView from './views/LoginView'
 
 function App() {
@@ -59,9 +57,8 @@ function App() {
     )
   }
 
-  if (profile.role === 'super_admin') return <SuperAdminView onLogout={handleLogout} />
-  if (profile.role === 'admin_club')  return <ClubAdminView  profile={profile} onLogout={handleLogout} />
-  if (profile.role === 'club_opp')   return <ClubOppView    profile={profile} onLogout={handleLogout} />
+  if (['super_admin', 'admin_club', 'club_opp'].includes(profile.role))
+    return <AppShell profile={profile} onLogout={handleLogout} />
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
