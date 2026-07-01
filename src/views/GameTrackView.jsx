@@ -16,6 +16,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
   const [elapsed, setElapsed] = useState(0) // segundos
   const intervalRef = useRef(null)
 
+  // ── YouTube pós-jogo ──
+  const [ytInput, setYtInput]     = useState('')
+  const [ytVideoId, setYtVideoId] = useState(null)
+  const [ytCollapsed, setYtCollapsed] = useState(false)
+
+  function applyYtUrl() {
+    const id = extractYouTubeId(ytInput.trim())
+    if (id) setYtVideoId(id)
+    else alert('URL do YouTube inválido. Usa um link do tipo youtube.com/watch?v=... ou youtu.be/...')
+  }
+
   useEffect(() => () => clearInterval(intervalRef.current), [])
 
   function startTimer() {
@@ -249,6 +260,70 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
         </div>
       )}
 
+      {/* ── YouTube panel (postmatch only) ── */}
+      {mode === 'postmatch' && (
+        <div style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+          {/* URL bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem' }}>
+            <span style={{ fontSize: '0.95rem' }}>▶️</span>
+            <input
+              value={ytInput}
+              onChange={(e) => setYtInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && applyYtUrl()}
+              placeholder="https://www.youtube.com/watch?v=..."
+              style={{
+                flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 6, padding: '0.38rem 0.75rem', color: 'white', fontSize: '0.82rem',
+                outline: 'none', fontFamily: 'inherit',
+              }}
+            />
+            <button onClick={applyYtUrl} style={{ ...btnStyle, background: '#1d4ed8', border: 'none' }}>
+              Carregar
+            </button>
+            {ytVideoId && (
+              <button onClick={() => setYtCollapsed((c) => !c)} style={btnStyle}>
+                {ytCollapsed ? '▼ Mostrar' : '▲ Minimizar'}
+              </button>
+            )}
+            {ytVideoId && (
+              <button onClick={() => { setYtVideoId(null); setYtInput('') }} style={btnStyle} title="Remover vídeo">
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* iframe */}
+          {ytVideoId && !ytCollapsed && (
+            <div style={{ padding: '0 1rem 0.75rem' }}>
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 8, overflow: 'hidden', background: '#000' }}>
+                <iframe
+                  key={ytVideoId}
+                  src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?rel=0&modestbranding=1`}
+                  title="Vídeo do jogo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                />
+              </div>
+              {/* Fallback link — sempre visível porque alguns vídeos bloqueiam embedding */}
+              <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
+                  Se o vídeo não carregar, o dono desactivou o embedding —
+                </span>
+                <a
+                  href={`https://www.youtube.com/watch?v=${ytVideoId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ fontSize: '0.72rem', color: '#60a5fa', fontWeight: 600, textDecoration: 'none' }}
+                >
+                  Abrir no YouTube ↗
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Player × event grid ── */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         {activeEvents.length === 0 ? (
@@ -331,6 +406,21 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
       </div>
     </div>
   )
+}
+
+function extractYouTubeId(url) {
+  const patterns = [
+    /[?&]v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const re of patterns) {
+    const m = url.match(re)
+    if (m) return m[1]
+  }
+  return null
 }
 
 const btnStyle = {
