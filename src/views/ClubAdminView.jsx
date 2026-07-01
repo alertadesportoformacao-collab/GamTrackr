@@ -38,7 +38,7 @@ export default function ClubAdminView({ profile, onLogout }) {
   }
 
   if (selectedGame) {
-    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} />
+    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} userRole={profile.role} />
   }
 
   return (

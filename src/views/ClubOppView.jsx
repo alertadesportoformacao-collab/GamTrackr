@@ -34,7 +34,7 @@ export default function ClubOppView({ profile, onLogout }) {
   }
 
   if (selectedGame) {
-    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} />
+    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} userRole={profile.role} />
   }
 
   return (
@@ -74,6 +74,7 @@ export default function ClubOppView({ profile, onLogout }) {
                       <th style={{ width: 110 }}>Data</th>
                       <th>Plantel</th>
                       <th>Adversário</th>
+                      <th className="col-center" style={{ width: 100 }}>Estado</th>
                       <th className="col-right">Ações</th>
                     </tr>
                   </thead>
@@ -83,6 +84,11 @@ export default function ClubOppView({ profile, onLogout }) {
                         <td className="cell-muted">{new Date(g.game_date).toLocaleDateString('pt-PT')}</td>
                         <td className="cell-muted">{g.escaloes?.name}</td>
                         <td className="cell-primary">{g.opponent}</td>
+                        <td className="col-center">
+                          {g.status === 'finished'
+                            ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 10px', borderRadius: 20 }}>Encerrado</span>
+                            : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: 20 }}>Activo</span>}
+                        </td>
                         <td className="col-actions">
                           <button className="btn btn-sm btn-success" onClick={() => setSelectedGame(g)}>▶ Abrir</button>
                         </td>

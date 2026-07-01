@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { db } from '../db'
 
-export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
+export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole }) {
   const [mode, setMode] = useState('realtime') // 'realtime' | 'postmatch'
   const [players, setPlayers] = useState([])
   const [teamEvents, setTeamEvents] = useState([])
@@ -16,15 +16,32 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
   const [elapsed, setElapsed] = useState(0) // segundos
   const intervalRef = useRef(null)
 
+  // ── Estado do jogo ──
+  const [gameStatus, setGameStatus] = useState(game.status || 'active')
+
   // ── YouTube pós-jogo ──
-  const [ytInput, setYtInput]     = useState('')
-  const [ytVideoId, setYtVideoId] = useState(null)
+  const initialYtId = game.youtube_url ? extractYouTubeId(game.youtube_url) : null
+  const [ytInput, setYtInput]         = useState(game.youtube_url || '')
+  const [ytVideoId, setYtVideoId]     = useState(initialYtId)
   const [ytCollapsed, setYtCollapsed] = useState(false)
 
-  function applyYtUrl() {
+  // club_opp não pode registar eventos após jogo encerrado
+  const isLocked = gameStatus === 'finished' && userRole === 'club_opp'
+
+  async function applyYtUrl() {
     const id = extractYouTubeId(ytInput.trim())
-    if (id) setYtVideoId(id)
-    else alert('URL do YouTube inválido. Usa um link do tipo youtube.com/watch?v=... ou youtu.be/...')
+    if (id) {
+      setYtVideoId(id)
+      await supabase.from('games').update({ youtube_url: ytInput.trim() }).eq('id', game.id)
+    } else {
+      alert('URL do YouTube inválido. Usa um link do tipo youtube.com/watch?v=... ou youtu.be/...')
+    }
+  }
+
+  async function handleEndGame() {
+    if (!confirm('Encerrar o jogo? Os operadores deixarão de poder registar eventos ao vivo.')) return
+    const { error } = await supabase.from('games').update({ status: 'finished' }).eq('id', game.id)
+    if (!error) setGameStatus('finished')
   }
 
   useEffect(() => () => clearInterval(intervalRef.current), [])
@@ -102,6 +119,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
       setPlayerEvents(types.filter((et) => et.registro_tipo === 'realtime' && et.requer_jogador))
       setPostMatchEvents(types.filter((et) => et.registro_tipo === 'postmatch'))
       await recalcCounts(game.id)
+
+      // refresh status/youtube_url from DB in case it changed elsewhere
+      const { data: fresh } = await supabase.from('games').select('status, youtube_url').eq('id', game.id).single()
+      if (fresh) {
+        if (fresh.status) setGameStatus(fresh.status)
+        if (fresh.youtube_url && !ytInput) {
+          setYtInput(fresh.youtube_url)
+          const id = extractYouTubeId(fresh.youtube_url)
+          if (id) setYtVideoId(id)
+        }
+      }
     }
     load()
   }, [game, recalcCounts])
@@ -118,6 +146,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
   }, [syncPendingEvents])
 
   async function registerEvent(player, eventType) {
+    if (isLocked) return
     const newEvent = {
       id: crypto.randomUUID(),
       game_id: game.id,
@@ -162,7 +191,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <span style={{ fontSize: '0.72rem', color: isOnline ? '#4ade80' : '#f87171', fontWeight: 700 }}>
             {isOnline ? '● Online' : '● Offline'}
           </span>
@@ -171,6 +200,23 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
               {pendingCount} por sync
             </span>
           )}
+
+          {/* Estado do jogo */}
+          {gameStatus === 'finished' ? (
+            <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
+              ⏹ Encerrado
+            </span>
+          ) : (
+            mode === 'realtime' && (
+              <button
+                onClick={handleEndGame}
+                style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}
+              >
+                ⏹ Encerrar Jogo
+              </button>
+            )
+          )}
+
           {mode === 'realtime' && (
             <button
               onClick={() => setMode('postmatch')}
@@ -182,6 +228,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
           <button onClick={onLogout} style={btnStyle}>Sair</button>
         </div>
       </div>
+
+      {/* ── Aviso jogo encerrado (club_opp) ── */}
+      {isLocked && mode === 'realtime' && (
+        <div style={{
+          background: 'rgba(220,38,38,0.12)', borderBottom: '1px solid rgba(220,38,38,0.25)',
+          padding: '0.55rem 1rem', flexShrink: 0,
+          fontSize: '0.82rem', color: '#fca5a5', fontWeight: 600, textAlign: 'center',
+        }}>
+          Jogo encerrado — o registo de eventos está bloqueado.
+        </div>
+      )}
 
       {/* ── Cronómetro (realtime only) ── */}
       {mode === 'realtime' && (
@@ -198,7 +255,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
             {formatTime(elapsed)}
           </span>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {timerState !== 'running' ? (
+            {!isLocked && (timerState !== 'running' ? (
               <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
                 {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
               </button>
@@ -206,8 +263,8 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
               <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
                 ⏸ Pausar
               </button>
-            )}
-            {timerState !== 'stopped' && (
+            ))}
+            {!isLocked && timerState !== 'stopped' && (
               <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
                 ⏹ Parar
               </button>
@@ -232,18 +289,20 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
                 <button
                   key={et.id}
                   onClick={() => registerEvent(null, et)}
+                  disabled={isLocked}
                   style={{
                     background: count > 0 ? et.color : 'rgba(255,255,255,0.08)',
                     color: 'white',
                     border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.15)'}`,
                     borderRadius: 8,
                     padding: '0.4rem 0.85rem',
-                    cursor: 'pointer',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
                     fontWeight: 700,
                     fontSize: '0.82rem',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.4rem',
+                    opacity: isLocked ? 0.45 : 1,
                     transition: 'background 0.1s',
                   }}
                 >
@@ -278,7 +337,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
               }}
             />
             <button onClick={applyYtUrl} style={{ ...btnStyle, background: '#1d4ed8', border: 'none' }}>
-              Carregar
+              Guardar
             </button>
             {ytVideoId && (
               <button onClick={() => setYtCollapsed((c) => !c)} style={btnStyle}>
@@ -286,7 +345,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
               </button>
             )}
             {ytVideoId && (
-              <button onClick={() => { setYtVideoId(null); setYtInput('') }} style={btnStyle} title="Remover vídeo">
+              <button onClick={() => { setYtVideoId(null); setYtInput(''); supabase.from('games').update({ youtube_url: null }).eq('id', game.id) }} style={btnStyle} title="Remover vídeo">
                 ✕
               </button>
             )}
@@ -305,7 +364,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
                 />
               </div>
-              {/* Fallback link — sempre visível porque alguns vídeos bloqueiam embedding */}
               <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
                   Se o vídeo não carregar, o dono desactivou o embedding —
@@ -380,6 +438,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
                       <td key={p.id} style={{ padding: '3px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
                         <button
                           onClick={() => registerEvent(p, et)}
+                          disabled={isLocked}
                           style={{
                             width: '100%',
                             minHeight: '42px',
@@ -389,7 +448,8 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
                             borderRadius: 6,
                             fontWeight: 800,
                             fontSize: count > 0 ? '1.05rem' : '0.7rem',
-                            cursor: 'pointer',
+                            cursor: isLocked ? 'not-allowed' : 'pointer',
+                            opacity: isLocked ? 0.45 : 1,
                             transition: 'background 0.1s',
                           }}
                         >
@@ -409,6 +469,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline }) {
 }
 
 function extractYouTubeId(url) {
+  if (!url) return null
   const patterns = [
     /[?&]v=([a-zA-Z0-9_-]{11})/,
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,

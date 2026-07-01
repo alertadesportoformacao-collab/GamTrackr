@@ -378,7 +378,7 @@ export function PlayersManager({ clubId }) {
 
 // ── Jogos ─────────────────────────────────────────────────────────────────────
 
-const EMPTY_GAME = { escalao_id: '', opponent: '', game_date: '' }
+const EMPTY_GAME = { escalao_id: '', opponent: '', game_date: '', status: 'active' }
 
 export function GamesManager({ clubId, onSelectGame }) {
   const [games, setGames] = useState([])
@@ -458,6 +458,7 @@ export function GamesManager({ clubId, onSelectGame }) {
                 <th style={{ width: 110 }}>Data</th>
                 <th>Escalão</th>
                 <th>Adversário</th>
+                <th className="col-center" style={{ width: 100 }}>Estado</th>
                 <th className="col-right">Ações</th>
               </tr></thead>
               <tbody>
@@ -466,6 +467,11 @@ export function GamesManager({ clubId, onSelectGame }) {
                     <td className="cell-muted">{new Date(g.game_date).toLocaleDateString('pt-PT')}</td>
                     <td className="cell-muted">{g.escaloes?.name}</td>
                     <td className="cell-primary">{g.opponent}</td>
+                    <td className="col-center">
+                      {g.status === 'finished'
+                        ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 10px', borderRadius: 20 }}>Encerrado</span>
+                        : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: 20 }}>Activo</span>}
+                    </td>
                     <td className="col-actions">
                       <button className="btn btn-sm btn-success" onClick={() => onSelectGame(g)}>▶ Registar</button>
                       <button className="btn btn-sm btn-secondary" onClick={() => openEdit(g)}>Editar</button>

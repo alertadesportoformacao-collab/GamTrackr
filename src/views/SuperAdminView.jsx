@@ -41,7 +41,7 @@ export default function SuperAdminView({ onLogout }) {
   }, [])
 
   if (selectedGame) {
-    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} />
+    return <GameTrackView game={selectedGame} onBack={() => setSelectedGame(null)} onLogout={onLogout} isOnline={isOnline} userRole="super_admin" />
   }
 
   const managedClub = clubs.find((c) => c.id === managedClubId)
