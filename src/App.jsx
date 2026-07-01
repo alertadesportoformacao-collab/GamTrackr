@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import SuperAdminView from './views/SuperAdminView'
 import ClubAdminView from './views/ClubAdminView'
+import ClubOppView from './views/ClubOppView'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -74,11 +75,16 @@ function App() {
     )
   }
 
-  if (profile.role === 'super_admin') {
-    return <SuperAdminView onLogout={handleLogout} />
-  }
+  if (profile.role === 'super_admin') return <SuperAdminView onLogout={handleLogout} />
+  if (profile.role === 'admin_club')  return <ClubAdminView  profile={profile} onLogout={handleLogout} />
+  if (profile.role === 'club_opp')   return <ClubOppView    profile={profile} onLogout={handleLogout} />
 
-  return <ClubAdminView profile={profile} onLogout={handleLogout} />
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+      <p>Papel desconhecido: <code>{profile.role}</code>. Contacta o administrador.</p>
+      <button onClick={handleLogout}>Sair</button>
+    </div>
+  )
 }
 
 export default App

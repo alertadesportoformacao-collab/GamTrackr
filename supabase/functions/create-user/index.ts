@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       name,
       email,
       role,
-      club_id: role === 'club_admin' ? (club_id || null) : null,
+      club_id: role !== 'super_admin' ? (club_id || null) : null,
     })
 
     if (profileError) throw profileError
