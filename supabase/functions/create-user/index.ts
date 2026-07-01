@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { name, email, password, role, club_id } = await req.json()
+    const { name, email, password, role, club_id, username } = await req.json()
 
     if (!email || !password || !role) {
       return new Response(JSON.stringify({ error: 'Campos obrigatórios em falta.' }), {
@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
       email,
       role,
       club_id: role !== 'super_admin' ? (club_id || null) : null,
+      username: username || null,
     })
 
     if (profileError) throw profileError

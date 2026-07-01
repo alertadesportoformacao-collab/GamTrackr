@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userId, name, email, password, role, club_id } = await req.json()
+    const { userId, name, email, password, role, club_id, username } = await req.json()
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'userId obrigatório.' }), {
@@ -37,10 +37,11 @@ Deno.serve(async (req) => {
 
     // Update profile fields
     const profileUpdate: Record<string, unknown> = {}
-    if (name  !== undefined) profileUpdate.name  = name
-    if (email !== undefined) profileUpdate.email = email
-    if (role  !== undefined) profileUpdate.role  = role
-    if (club_id !== undefined) {
+    if (name     !== undefined) profileUpdate.name     = name
+    if (email    !== undefined) profileUpdate.email    = email
+    if (role     !== undefined) profileUpdate.role     = role
+    if (username !== undefined) profileUpdate.username = username || null
+    if (club_id  !== undefined) {
       profileUpdate.club_id = role === 'super_admin' ? null : (club_id || null)
     }
 

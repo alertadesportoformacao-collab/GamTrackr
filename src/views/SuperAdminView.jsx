@@ -483,7 +483,7 @@ const ROLE_STYLE  = {
   admin_club:  { background: 'rgba(56,189,248,0.12)', color: '#38bdf8' },
   club_opp:    { background: 'rgba(52,211,153,0.12)', color: '#34d399' },
 }
-const EMPTY_USER = { name: '', email: '', password: '', role: 'admin_club', club_id: '' }
+const EMPTY_USER = { name: '', email: '', password: '', role: 'admin_club', club_id: '', username: '' }
 
 export function UsersManager() {
   const [users, setUsers] = useState([])
@@ -510,7 +510,7 @@ export function UsersManager() {
   }
   function openEdit(u) {
     setEditing(u)
-    setForm({ name: u.name || '', email: u.email || '', password: '', role: u.role, club_id: u.club_id || '' })
+    setForm({ name: u.name || '', email: u.email || '', password: '', role: u.role, club_id: u.club_id || '', username: u.username || u.name || '' })
     setErrors({}); setApiError(''); setOpen(true)
   }
   function close() { setOpen(false) }
@@ -532,15 +532,15 @@ export function UsersManager() {
     if (!validate()) return
     setSaving(true); setApiError('')
     if (editing) {
-      const body = { userId: editing.id, name: form.name, email: form.email, role: form.role, club_id: form.club_id }
+      const body = { userId: editing.id, name: form.name, email: form.email, role: form.role, club_id: form.club_id, username: form.username || null }
       if (form.password) body.password = form.password
       const { error: fnError } = await supabase.functions.invoke('update-user', { body })
-      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+      if (fnError) { setApiError(fnError.message || JSON.stringify(fnError)); setSaving(false); return }
     } else {
       const { error: fnError } = await supabase.functions.invoke('create-user', {
-        body: { name: form.name, email: form.email, password: form.password, role: form.role, club_id: form.role !== 'super_admin' ? (form.club_id || null) : null },
+        body: { name: form.name, email: form.email, password: form.password, role: form.role, club_id: form.role !== 'super_admin' ? (form.club_id || null) : null, username: form.username || null },
       })
-      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+      if (fnError) { setApiError(fnError.message || JSON.stringify(fnError)); setSaving(false); return }
     }
     close(); load(); setSaving(false)
   }
@@ -557,6 +557,11 @@ export function UsersManager() {
           <Field label="Nome" required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" />
+          </Field>
+          <Field label="Username">
+            <input className="admin-input" value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/\s+/g, '') })}
+              placeholder="ex: tiagob" />
           </Field>
           <Field label="Email" required error={errors.email}>
             <input className={`admin-input${errors.email ? ' input-error' : ''}`} type="email" value={form.email}
@@ -583,7 +588,7 @@ export function UsersManager() {
             </Field>
           )}
         </div>
-        {apiError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#dc2626', background: '#fee2e2', padding: '0.5rem 0.75rem', borderRadius: 6 }}>{apiError}</p>}
+        {apiError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#f87171', background: 'rgba(239,68,68,0.08)', padding: '0.5rem 0.75rem', borderRadius: 6 }}>{apiError}</p>}
         <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? 'Guardar' : 'Criar utilizador'} />
       </Modal>
 
@@ -596,13 +601,14 @@ export function UsersManager() {
           <div className="table-scroll">
             <table className="admin-table">
               <thead><tr>
-                <th>Nome</th><th>Email</th><th>Papel</th><th>Clube</th>
+                <th>Nome</th><th>Username</th><th>Email</th><th>Papel</th><th>Clube</th>
                 <th className="col-right">Ações</th>
               </tr></thead>
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id}>
                     <td className="cell-primary">{u.name || '—'}</td>
+                    <td className="cell-muted">{u.username || '—'}</td>
                     <td className="cell-muted">{u.email}</td>
                     <td><span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 9px', borderRadius: 20, ...ROLE_STYLE[u.role] }}>{ROLE_LABELS[u.role] ?? u.role}</span></td>
                     <td className="cell-muted">{u.clubs?.name || '—'}</td>
