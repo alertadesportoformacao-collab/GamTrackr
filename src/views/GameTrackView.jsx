@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { db } from '../db'
+import '../game-track.css'
 
 export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole }) {
-  const [mode, setMode] = useState('realtime') // 'realtime' | 'postmatch'
+  const [mode, setMode] = useState('realtime')
   const [players, setPlayers] = useState([])
   const [teamEvents, setTeamEvents] = useState([])
   const [playerEvents, setPlayerEvents] = useState([])
@@ -11,21 +12,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   const [registeredCounts, setRegisteredCounts] = useState({})
   const [pendingCount, setPendingCount] = useState(0)
 
-  // ── Cronómetro ──
-  const [timerState, setTimerState] = useState('stopped') // 'stopped' | 'running' | 'paused'
-  const [elapsed, setElapsed] = useState(0) // segundos
+  const [timerState, setTimerState] = useState('stopped')
+  const [elapsed, setElapsed] = useState(0)
   const intervalRef = useRef(null)
 
-  // ── Estado do jogo ──
   const [gameStatus, setGameStatus] = useState(game.status || 'active')
 
-  // ── YouTube pós-jogo ──
   const initialYtId = game.youtube_url ? extractYouTubeId(game.youtube_url) : null
   const [ytInput, setYtInput]         = useState(game.youtube_url || '')
   const [ytVideoId, setYtVideoId]     = useState(initialYtId)
   const [ytCollapsed, setYtCollapsed] = useState(false)
 
-  // club_opp não pode registar eventos após jogo encerrado
   const isLocked = gameStatus === 'finished' && userRole === 'club_opp'
 
   async function applyYtUrl() {
@@ -66,14 +63,9 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   const recalcCounts = useCallback(async (gameId) => {
     let serverEvents = []
     try {
-      const { data } = await supabase
-        .from('game_events')
-        .select('player_id, event_type_id')
-        .eq('game_id', gameId)
+      const { data } = await supabase.from('game_events').select('player_id, event_type_id').eq('game_id', gameId)
       serverEvents = data || []
-    } catch {
-      // offline — count only from local
-    }
+    } catch { /* offline */ }
 
     const localEvents = (await db.pendingEvents.where('game_id').equals(gameId).toArray())
       .filter((ev) => ev.synced === 0)
@@ -104,10 +96,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   useEffect(() => {
     async function load() {
       const { data: playersData } = await supabase
-        .from('players')
-        .select('*')
-        .eq('escalao_id', game.escaloes.id)
-        .order('number')
+        .from('players').select('*').eq('escalao_id', game.escaloes.id).order('number')
 
       let etQuery = supabase.from('event_types').select('*').order('sort_order')
       if (game.escaloes?.modality_id) etQuery = etQuery.eq('modality_id', game.escaloes.modality_id)
@@ -120,7 +109,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       setPostMatchEvents(types.filter((et) => et.registro_tipo === 'postmatch'))
       await recalcCounts(game.id)
 
-      // refresh status/youtube_url from DB in case it changed elsewhere
       const { data: fresh } = await supabase.from('games').select('status, youtube_url').eq('id', game.id).single()
       if (fresh) {
         if (fresh.status) setGameStatus(fresh.status)
@@ -161,67 +149,50 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   }
 
   const activeEvents = mode === 'realtime' ? playerEvents : postMatchEvents
+  const timerColor = timerState === 'running' ? '#4ade80' : timerState === 'paused' ? '#fbbf24' : 'rgba(255,255,255,0.5)'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f2744', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="gt-wrap">
 
       {/* ── Header ── */}
-      <div style={{
-        padding: '0.6rem 1rem', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', gap: '0.5rem',
-        borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            onClick={mode === 'postmatch' ? () => setMode('realtime') : onBack}
-            style={btnStyle}
-          >
+      <div className="gt-header">
+        <div className="gt-header-left">
+          <button onClick={mode === 'postmatch' ? () => setMode('realtime') : onBack} style={btnStyle}>
             ← {mode === 'postmatch' ? 'Jogo' : 'Voltar'}
           </button>
-          <div>
-            <div style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '-0.01em' }}>
-              {game.escaloes?.name} vs {game.opponent}
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem' }}>
+          <div className="gt-title-block">
+            <div className="gt-title">{game.escaloes?.name} vs {game.opponent}</div>
+            <div className="gt-subtitle">
               {new Date(game.game_date).toLocaleDateString('pt-PT')}
-              {mode === 'postmatch' && (
-                <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· Análise Pós-Jogo</span>
-              )}
+              {mode === 'postmatch' && <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· Pós-Jogo</span>}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div className="gt-header-right">
           <span style={{ fontSize: '0.72rem', color: isOnline ? '#4ade80' : '#f87171', fontWeight: 700 }}>
             {isOnline ? '● Online' : '● Offline'}
           </span>
           {pendingCount > 0 && (
             <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
-              {pendingCount} por sync
+              {pendingCount} sync
             </span>
           )}
-
-          {/* Estado do jogo */}
           {gameStatus === 'finished' ? (
             <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
               ⏹ Encerrado
             </span>
           ) : (
             mode === 'realtime' && (
-              <button
-                onClick={handleEndGame}
-                style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}
-              >
-                ⏹ Encerrar Jogo
+              <button onClick={handleEndGame}
+                style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
+                ⏹ Encerrar
               </button>
             )
           )}
-
           {mode === 'realtime' && (
-            <button
-              onClick={() => setMode('postmatch')}
-              style={{ ...btnStyle, background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }}
-            >
+            <button onClick={() => setMode('postmatch')}
+              style={{ ...btnStyle, background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }}>
               📊 Pós-Jogo
             </button>
           )}
@@ -229,41 +200,24 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         </div>
       </div>
 
-      {/* ── Aviso jogo encerrado (club_opp) ── */}
+      {/* ── Aviso encerrado ── */}
       {isLocked && mode === 'realtime' && (
-        <div style={{
-          background: 'rgba(220,38,38,0.12)', borderBottom: '1px solid rgba(220,38,38,0.25)',
-          padding: '0.55rem 1rem', flexShrink: 0,
-          fontSize: '0.82rem', color: '#fca5a5', fontWeight: 600, textAlign: 'center',
-        }}>
-          Jogo encerrado — o registo de eventos está bloqueado.
-        </div>
+        <div className="gt-lock-banner">Jogo encerrado — o registo de eventos está bloqueado.</div>
       )}
 
-      {/* ── Cronómetro (realtime only) ── */}
+      {/* ── Cronómetro ── */}
       {mode === 'realtime' && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem',
-          padding: '0.6rem 1rem', background: 'rgba(0,0,0,0.35)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0,
-        }}>
-          <span style={{
-            fontVariantNumeric: 'tabular-nums', fontWeight: 800, fontSize: '2rem',
-            letterSpacing: '0.05em', color: timerState === 'running' ? '#4ade80' : timerState === 'paused' ? '#fbbf24' : 'rgba(255,255,255,0.5)',
-            minWidth: '5ch', textAlign: 'center', transition: 'color 0.2s',
-          }}>
-            {formatTime(elapsed)}
-          </span>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {!isLocked && (timerState !== 'running' ? (
-              <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
-                {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
-              </button>
-            ) : (
-              <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
-                ⏸ Pausar
-              </button>
-            ))}
+        <div className="gt-timer">
+          <span className="gt-timer-value" style={{ color: timerColor }}>{formatTime(elapsed)}</span>
+          <div className="gt-timer-btns">
+            {!isLocked && (timerState !== 'running'
+              ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
+                  {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
+                </button>
+              : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
+                  ⏸ Pausar
+                </button>
+            )}
             {!isLocked && timerState !== 'stopped' && (
               <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
                 ⏹ Parar
@@ -273,39 +227,26 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         </div>
       )}
 
-      {/* ── Team events (realtime only) ── */}
+      {/* ── Eventos de equipa ── */}
       {mode === 'realtime' && teamEvents.length > 0 && (
-        <div style={{
-          background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.08)',
-          padding: '0.6rem 1rem', flexShrink: 0,
-        }}>
-          <div style={{ fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', color: 'rgba(255,255,255,0.4)', marginBottom: '0.45rem' }}>
-            Eventos de Equipa
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="gt-team-events">
+          <div className="gt-team-label">Eventos de Equipa</div>
+          <div className="gt-team-btns">
             {teamEvents.map((et) => {
               const count = registeredCounts[`null_${et.id}`] || 0
               return (
-                <button
-                  key={et.id}
-                  onClick={() => registerEvent(null, et)}
-                  disabled={isLocked}
+                <button key={et.id} onClick={() => registerEvent(null, et)} disabled={isLocked}
                   style={{
                     background: count > 0 ? et.color : 'rgba(255,255,255,0.08)',
                     color: 'white',
                     border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.15)'}`,
-                    borderRadius: 8,
-                    padding: '0.4rem 0.85rem',
+                    borderRadius: 8, padding: '0.4rem 0.85rem',
                     cursor: isLocked ? 'not-allowed' : 'pointer',
-                    fontWeight: 700,
-                    fontSize: '0.82rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
+                    fontWeight: 700, fontSize: '0.82rem',
+                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
                     opacity: isLocked ? 0.45 : 1,
-                    transition: 'background 0.1s',
-                  }}
-                >
+                    touchAction: 'manipulation', userSelect: 'none',
+                  }}>
                   {et.name}
                   {count > 0 && (
                     <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '0 6px', fontSize: '0.78rem' }}>
@@ -319,61 +260,43 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         </div>
       )}
 
-      {/* ── YouTube panel (postmatch only) ── */}
+      {/* ── YouTube panel (pós-jogo) ── */}
       {mode === 'postmatch' && (
-        <div style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-          {/* URL bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem' }}>
-            <span style={{ fontSize: '0.95rem' }}>▶️</span>
-            <input
-              value={ytInput}
+        <div className="gt-yt-panel">
+          <div className="gt-yt-bar">
+            <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>▶️</span>
+            <input className="gt-yt-input" value={ytInput}
               onChange={(e) => setYtInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && applyYtUrl()}
-              placeholder="https://www.youtube.com/watch?v=..."
-              style={{
-                flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: 6, padding: '0.38rem 0.75rem', color: 'white', fontSize: '0.82rem',
-                outline: 'none', fontFamily: 'inherit',
-              }}
-            />
-            <button onClick={applyYtUrl} style={{ ...btnStyle, background: '#1d4ed8', border: 'none' }}>
+              placeholder="https://www.youtube.com/watch?v=..." />
+            <button onClick={applyYtUrl} style={{ ...btnStyle, background: '#1d4ed8', border: 'none', flexShrink: 0 }}>
               Guardar
             </button>
             {ytVideoId && (
-              <button onClick={() => setYtCollapsed((c) => !c)} style={btnStyle}>
-                {ytCollapsed ? '▼ Mostrar' : '▲ Minimizar'}
+              <button onClick={() => setYtCollapsed((c) => !c)} style={{ ...btnStyle, flexShrink: 0 }}>
+                {ytCollapsed ? '▼' : '▲'}
               </button>
             )}
             {ytVideoId && (
-              <button onClick={() => { setYtVideoId(null); setYtInput(''); supabase.from('games').update({ youtube_url: null }).eq('id', game.id) }} style={btnStyle} title="Remover vídeo">
-                ✕
-              </button>
+              <button onClick={() => { setYtVideoId(null); setYtInput(''); supabase.from('games').update({ youtube_url: null }).eq('id', game.id) }}
+                style={{ ...btnStyle, flexShrink: 0 }} title="Remover vídeo">✕</button>
             )}
           </div>
-
-          {/* iframe */}
           {ytVideoId && !ytCollapsed && (
-            <div style={{ padding: '0 1rem 0.75rem' }}>
-              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 8, overflow: 'hidden', background: '#000' }}>
-                <iframe
-                  key={ytVideoId}
+            <div className="gt-yt-embed">
+              <div className="gt-yt-ratio">
+                <iframe key={ytVideoId}
                   src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?rel=0&modestbranding=1`}
                   title="Vídeo do jogo"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                />
+                  allowFullScreen />
               </div>
-              <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="gt-yt-fallback">
                 <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
                   Se o vídeo não carregar, o dono desactivou o embedding —
                 </span>
-                <a
-                  href={`https://www.youtube.com/watch?v=${ytVideoId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontSize: '0.72rem', color: '#60a5fa', fontWeight: 600, textDecoration: 'none' }}
-                >
+                <a href={`https://www.youtube.com/watch?v=${ytVideoId}`} target="_blank" rel="noreferrer"
+                  style={{ fontSize: '0.72rem', color: '#60a5fa', fontWeight: 600, textDecoration: 'none' }}>
                   Abrir no YouTube ↗
                 </a>
               </div>
@@ -382,84 +305,55 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         </div>
       )}
 
-      {/* ── Player × event grid ── */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      {/* ── Grelha jogador × evento ── */}
+      <div className="gt-grid">
         {activeEvents.length === 0 ? (
           <div style={{ color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '3rem 1rem', fontSize: '0.9rem' }}>
             Sem eventos {mode === 'postmatch' ? 'pós-jogo' : 'em tempo real'} configurados.
           </div>
         ) : (
-          <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 'max-content' }}>
+          <table className="gt-table">
             <thead>
               <tr style={{ background: 'rgba(0,0,0,0.35)' }}>
-                <th style={{
-                  position: 'sticky', left: 0, background: '#0a1e38',
-                  textAlign: 'left', padding: '7px 12px',
-                  fontSize: '0.62rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
-                  color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', minWidth: 130,
-                  borderRight: '1px solid rgba(255,255,255,0.1)',
-                }}>
-                  Evento
-                </th>
+                <th className="gt-col-event">Evento</th>
                 {players.map((p) => (
-                  <th key={p.id} style={{
-                    padding: '6px 3px', fontSize: '0.68rem', minWidth: 64, textAlign: 'center',
-                    color: 'rgba(255,255,255,0.6)', fontWeight: 600,
-                    borderRight: '1px solid rgba(255,255,255,0.05)',
-                  }}>
-                    <div style={{ fontWeight: 800, color: 'white', fontSize: '0.8rem' }}>#{p.number}</div>
-                    <div style={{ fontSize: '0.62rem', maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.7 }}>
-                      {p.name.split(' ')[0]}
-                    </div>
+                  <th key={p.id} className="gt-col-player">
+                    <div className="gt-player-num">#{p.number}</div>
+                    <div className="gt-player-name">{p.name.split(' ')[0]}</div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {activeEvents.map((et, rowIdx) => (
-                <tr key={et.id} style={{ background: rowIdx % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent' }}>
-                  <td style={{
-                    position: 'sticky', left: 0,
-                    background: rowIdx % 2 === 0 ? '#122b4a' : '#0f2744',
-                    padding: '3px 12px', fontWeight: 600, fontSize: '0.8rem',
-                    whiteSpace: 'nowrap', color: 'rgba(255,255,255,0.88)',
-                    borderRight: '1px solid rgba(255,255,255,0.08)',
-                  }}>
-                    <span style={{
-                      width: 9, height: 9, borderRadius: '50%', background: et.color,
-                      display: 'inline-block', marginRight: 7, verticalAlign: 'middle',
-                    }} />
-                    {et.name}
-                  </td>
-                  {players.map((p) => {
-                    const key = `${p.id}_${et.id}`
-                    const count = registeredCounts[key] || 0
-                    return (
-                      <td key={p.id} style={{ padding: '3px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-                        <button
-                          onClick={() => registerEvent(p, et)}
-                          disabled={isLocked}
-                          style={{
-                            width: '100%',
-                            minHeight: '42px',
-                            background: count > 0 ? et.color : 'rgba(255,255,255,0.06)',
-                            color: count > 0 ? 'white' : 'rgba(255,255,255,0.25)',
-                            border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.08)'}`,
-                            borderRadius: 6,
-                            fontWeight: 800,
-                            fontSize: count > 0 ? '1.05rem' : '0.7rem',
-                            cursor: isLocked ? 'not-allowed' : 'pointer',
-                            opacity: isLocked ? 0.45 : 1,
-                            transition: 'background 0.1s',
-                          }}
-                        >
-                          {count > 0 ? count : ''}
-                        </button>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+              {activeEvents.map((et, rowIdx) => {
+                const evenBg = rowIdx % 2 === 0
+                return (
+                  <tr key={et.id} style={{ background: evenBg ? 'rgba(255,255,255,0.025)' : 'transparent' }}>
+                    <td className="gt-row-event" style={{ background: evenBg ? '#122b4a' : '#0f2744' }}>
+                      <span style={{ width: 9, height: 9, borderRadius: '50%', background: et.color, display: 'inline-block', marginRight: 7, verticalAlign: 'middle' }} />
+                      {et.name}
+                    </td>
+                    {players.map((p) => {
+                      const count = registeredCounts[`${p.id}_${et.id}`] || 0
+                      return (
+                        <td key={p.id} className="gt-cell">
+                          <button className="gt-event-btn" onClick={() => registerEvent(p, et)} disabled={isLocked}
+                            style={{
+                              background: count > 0 ? et.color : 'rgba(255,255,255,0.06)',
+                              color: count > 0 ? 'white' : 'rgba(255,255,255,0.25)',
+                              border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.08)'}`,
+                              fontSize: count > 0 ? '1.05rem' : '0.7rem',
+                              cursor: isLocked ? 'not-allowed' : 'pointer',
+                              opacity: isLocked ? 0.45 : 1,
+                            }}>
+                            {count > 0 ? count : ''}
+                          </button>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
@@ -487,21 +381,15 @@ function extractYouTubeId(url) {
 const btnStyle = {
   background: 'rgba(255,255,255,0.1)',
   border: '1px solid rgba(255,255,255,0.18)',
-  color: 'white',
-  borderRadius: 6,
+  color: 'white', borderRadius: 6,
   padding: '0.32rem 0.7rem',
-  cursor: 'pointer',
-  fontSize: '0.82rem',
-  fontWeight: 600,
-  whiteSpace: 'nowrap',
+  cursor: 'pointer', fontSize: '0.82rem',
+  fontWeight: 600, whiteSpace: 'nowrap',
 }
 
 const timerBtn = {
-  border: 'none',
-  borderRadius: 8,
+  border: 'none', borderRadius: 8,
   padding: '0.45rem 1.1rem',
-  cursor: 'pointer',
-  fontSize: '0.88rem',
-  fontWeight: 700,
-  whiteSpace: 'nowrap',
+  cursor: 'pointer', fontSize: '0.88rem',
+  fontWeight: 700, whiteSpace: 'nowrap',
 }

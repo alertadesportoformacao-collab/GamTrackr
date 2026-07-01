@@ -501,3 +501,100 @@
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
 }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Shell ocupa a altura dinâmica do viewport (exclui barra do browser) */
+  .admin-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Layout: sidebar passa a barra de tabs horizontal no topo */
+  .admin-body {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .admin-sidebar::-webkit-scrollbar { display: none; }
+
+  .admin-nav-section { display: none; }
+
+  .admin-nav-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.68rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    min-width: 64px;
+    text-align: center;
+  }
+
+  .admin-nav-item.active {
+    border-left-color: transparent;
+    border-bottom-color: #1d4ed8;
+  }
+
+  .admin-nav-icon { font-size: 1.15rem; }
+
+  /* Main: scroll da página inteira em mobile */
+  .admin-main {
+    padding: 0.875rem;
+    overflow: visible;
+  }
+
+  /* Cards mais compactos */
+  .admin-card-header {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Tabelas: reduz padding, mantém scroll horizontal */
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.65rem;
+  }
+
+  /* Formulários: sempre uma coluna */
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Header: menos padding */
+  .admin-header { padding: 0 0.875rem; }
+}
+
+@media (max-width: 480px) {
+  .admin-main { padding: 0.625rem; }
+
+  .btn-sm {
+    padding: 0.28rem 0.5rem;
+    font-size: 0.72rem;
+  }
+
+  /* Ações em coluna em vez de linha em tabelas muito estreitas */
+  .admin-table td.col-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    justify-content: flex-end;
+  }
+}
