@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Radio, CalendarDays, Users, Shield,
   UserCog, Building2, Globe, Zap, UsersRound, LogOut,
-  Bell, Menu, X, ChevronRight,
+  Bell, Menu, X, ChevronRight, MessageSquare,
 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { useTheme } from '../ThemeContext'
@@ -14,6 +14,7 @@ import {
 import {
   ClubsManager, ModalitiesManager, EventTypesManager, UsersManager,
 } from '../views/SuperAdminView'
+import AssistenteView from '../views/AssistenteView'
 import '../admin.css'
 
 // ── Nav config ────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ const NAV = {
     { id: 'jogadores',   label: 'Jogadores',     icon: Users },
     { id: 'equipas',     label: 'Equipas',       icon: Shield },
     { id: 'operadores',  label: 'Operadores',    icon: UserCog },
+    { id: 'assistente',  label: 'Assistente',    icon: MessageSquare },
   ],
   club_opp: [
     { id: 'jogos', label: 'Jogos', icon: CalendarDays },
@@ -36,6 +38,7 @@ const NAV = {
     { id: 'modalities',  label: 'Modalidades',      icon: Globe },
     { id: 'eventTypes',  label: 'Ações de Jogo',    icon: Zap },
     { id: 'users',       label: 'Utilizadores',     icon: UsersRound },
+    { id: 'assistente',  label: 'Assistente',       icon: MessageSquare },
     { id: 'escaloes',    label: 'Escalões',         icon: Shield,     section: 'Gerir Clube', clubOnly: true },
     { id: 'sa-jogadores',label: 'Jogadores',        icon: Users,      clubOnly: true },
     { id: 'sa-jogos',    label: 'Jogos',            icon: CalendarDays, clubOnly: true },
@@ -49,6 +52,7 @@ const PAGE_TITLES = {
   clubs: 'Clubes', modalities: 'Modalidades', eventTypes: 'Ações de Jogo',
   users: 'Utilizadores', escaloes: 'Escalões',
   'sa-jogadores': 'Jogadores', 'sa-jogos': 'Jogos',
+  assistente: 'Assistente IA',
 }
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
@@ -145,6 +149,9 @@ export default function AppShell({ profile, onLogout }) {
 
       case 'users':
         return wrap(<UsersManager />)
+
+      case 'assistente':
+        return <AssistenteView clubId={clubId} />
 
       default:
         return null
