@@ -1,131 +1,36 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
-import { db } from './db'
+import SuperAdminView from './views/SuperAdminView'
+import ClubAdminView from './views/ClubAdminView'
 
 function App() {
   const [session, setSession] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
-  const [games, setGames] = useState([])
-  const [selectedGame, setSelectedGame] = useState(null)
-  const [players, setPlayers] = useState([])
-  const [eventTypes, setEventTypes] = useState([])
-  const [registeredCounts, setRegisteredCounts] = useState({})
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [pendingCount, setPendingCount] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      if (data.session) fetchProfile(data.session.user.id)
+      else setLoading(false)
+    })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session) fetchProfile(session.user.id)
+      else { setProfile(null); setLoading(false) }
     })
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
-    if (!session) return
-    async function loadGames() {
-      const { data } = await supabase.from('games').select('*, teams(id, name)')
-      setGames(data || [])
-    }
-    loadGames()
-  }, [session])
-
-  // Recalcula contadores juntando eventos já sincronizados (Supabase) + pendentes (locais)
-  const recalcCounts = useCallback(async (gameId) => {
-    const { data: serverEvents } = await supabase
-      .from('game_events')
-      .select('player_id, event_type_id')
-      .eq('game_id', gameId)
-
-    const localEvents = await db.pendingEvents.where('game_id').equals(gameId).toArray()
-
-    const counts = {}
-    ;[...(serverEvents || []), ...localEvents].forEach((ev) => {
-      const key = `${ev.player_id}_${ev.event_type_id}`
-      counts[key] = (counts[key] || 0) + 1
-    })
-    setRegisteredCounts(counts)
-
-    const allPending = await db.pendingEvents.where('synced').equals(0).toArray()
-    setPendingCount(allPending.length)
-  }, [])
-
-  async function openGame(game) {
-    setSelectedGame(game)
-    const { data: playersData } = await supabase
-      .from('players')
-      .select('*')
-      .eq('team_id', game.teams.id)
-      .order('number')
-    const { data: eventTypesData } = await supabase
-      .from('event_types')
-      .select('*')
-      .order('sort_order')
-
-    setPlayers(playersData || [])
-    setEventTypes(eventTypesData || [])
-    await recalcCounts(game.id)
+  async function fetchProfile(userId) {
+    setLoading(true)
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    setProfile(data)
+    setLoading(false)
   }
-
-  // Toque no botão: grava SEMPRE primeiro localmente (funciona offline, é instantâneo)
-  async function registerEvent(player, eventType) {
-    const newEvent = {
-      id: crypto.randomUUID(),
-      game_id: selectedGame.id,
-      event_type_id: eventType.id,
-      player_id: player.id,
-      synced: 0,
-    }
-
-    await db.pendingEvents.add(newEvent)
-    await recalcCounts(selectedGame.id)
-
-    // Tenta sincronizar de imediato se houver ligação
-    syncPendingEvents()
-  }
-
-  // Envia para o Supabase todos os eventos locais ainda não sincronizados
-  const syncPendingEvents = useCallback(async () => {
-    if (!navigator.onLine) return
-
-    const pending = await db.pendingEvents.where('synced').equals(0).toArray()
-    if (pending.length === 0) return
-
-    for (const ev of pending) {
-      const { synced, ...eventToSend } = ev
-      const { error } = await supabase.from('game_events').insert(eventToSend)
-      if (!error) {
-        await db.pendingEvents.update(ev.id, { synced: 1 })
-      }
-    }
-
-    if (selectedGame) await recalcCounts(selectedGame.id)
-  }, [selectedGame, recalcCounts])
-
-  // Deteta mudanças de ligação e sincroniza automaticamente ao voltar a ficar online
-  useEffect(() => {
-    function handleOnline() {
-      setIsOnline(true)
-      syncPendingEvents()
-    }
-    function handleOffline() {
-      setIsOnline(false)
-    }
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [syncPendingEvents])
-
-  // Tenta sincronizar periodicamente, como rede de segurança
-  useEffect(() => {
-    const interval = setInterval(syncPendingEvents, 15000)
-    return () => clearInterval(interval)
-  }, [syncPendingEvents])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -138,28 +43,20 @@ function App() {
     await supabase.auth.signOut()
   }
 
+  if (loading) {
+    return <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>A carregar...</div>
+  }
+
   if (!session) {
     return (
       <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: 320 }}>
         <h1>GamTrackr</h1>
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom: '1rem' }}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem' }}
-            />
+            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem' }}
-            />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
           </div>
           <button type="submit" style={{ padding: '0.5rem 1rem' }}>Entrar</button>
         </form>
@@ -168,96 +65,20 @@ function App() {
     )
   }
 
-  if (!selectedGame) {
+  if (!profile) {
     return (
       <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <h1>GamTrackr</h1>
-          <button onClick={handleLogout}>Sair</button>
-        </div>
-        <h2>Escolhe o jogo</h2>
-        <ul>
-          {games.map((g) => (
-            <li key={g.id} style={{ marginBottom: '0.5rem' }}>
-              <button onClick={() => openGame(g)} style={{ padding: '0.5rem 1rem' }}>
-                {g.teams?.name} vs {g.opponent} — {new Date(g.game_date).toLocaleDateString('pt-PT')}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <p>Perfil não encontrado. Contacta o administrador do sistema.</p>
+        <button onClick={handleLogout}>Sair</button>
       </div>
     )
   }
 
-  return (
-    <div style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div>
-          <button onClick={() => setSelectedGame(null)}>← Voltar</button>
-          <h1 style={{ margin: '0.5rem 0' }}>
-            {selectedGame.teams?.name} vs {selectedGame.opponent}
-          </h1>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: isOnline ? 'green' : 'red', fontWeight: 'bold' }}>
-            {isOnline ? '● Online' : '● Offline'}
-          </div>
-          {pendingCount > 0 && (
-            <div style={{ fontSize: '0.8rem', color: '#888' }}>{pendingCount} por sincronizar</div>
-          )}
-          <button onClick={handleLogout}>Sair</button>
-        </div>
-      </div>
+  if (profile.role === 'super_admin') {
+    return <SuperAdminView onLogout={handleLogout} />
+  }
 
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-          <thead>
-            <tr>
-              <th style={{ position: 'sticky', left: 0, background: 'white', textAlign: 'left', padding: '4px 8px' }}>
-                Jogador
-              </th>
-              {eventTypes.map((et) => (
-                <th key={et.id} style={{ padding: '4px', fontSize: '0.75rem', minWidth: '70px' }}>
-                  {et.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((p) => (
-              <tr key={p.id}>
-                <td style={{ position: 'sticky', left: 0, background: 'white', padding: '4px 8px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                  #{p.number} {p.name}
-                </td>
-                {eventTypes.map((et) => {
-                  const key = `${p.id}_${et.id}`
-                  const count = registeredCounts[key] || 0
-                  return (
-                    <td key={et.id} style={{ padding: '2px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => registerEvent(p, et)}
-                        style={{
-                          width: '100%',
-                          minHeight: '48px',
-                          backgroundColor: et.color,
-                          color: 'white',
-                          border: count > 0 ? '3px solid black' : 'none',
-                          borderRadius: '6px',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {count > 0 ? count : ''}
-                      </button>
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
+  return <ClubAdminView profile={profile} onLogout={handleLogout} />
 }
 
 export default App
