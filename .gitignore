@@ -27,3 +27,5 @@ dist-ssr
 .env.staging
 .env.dev
 .env.production
+.vercel
+.env*
