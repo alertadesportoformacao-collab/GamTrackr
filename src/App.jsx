@@ -3,12 +3,11 @@ import { supabase } from './supabaseClient'
 import SuperAdminView from './views/SuperAdminView'
 import ClubAdminView from './views/ClubAdminView'
 import ClubOppView from './views/ClubOppView'
+import LoginView from './views/LoginView'
 
 function App() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -33,8 +32,7 @@ function App() {
     setLoading(false)
   }
 
-  async function handleLogin(e) {
-    e.preventDefault()
+  async function handleLogin(email, password) {
     setLoginError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setLoginError(error.message)
@@ -49,21 +47,7 @@ function App() {
   }
 
   if (!session) {
-    return (
-      <div style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: 320 }}>
-        <h1>GamTrackr</h1>
-        <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: '1rem' }}>
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-          </div>
-          <button type="submit" style={{ padding: '0.5rem 1rem' }}>Entrar</button>
-        </form>
-        {loginError && <p style={{ color: 'red' }}>{loginError}</p>}
-      </div>
-    )
+    return <LoginView onLogin={handleLogin} loginError={loginError} />
   }
 
   if (!profile) {
