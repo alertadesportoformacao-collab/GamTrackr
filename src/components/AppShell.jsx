@@ -33,7 +33,7 @@ const NAV = {
     { id: 'dashboard',   label: 'Dashboard',       icon: LayoutDashboard, section: 'Gestão Global' },
     { id: 'clubs',       label: 'Clubes',           icon: Building2 },
     { id: 'modalities',  label: 'Modalidades',      icon: Globe },
-    { id: 'eventTypes',  label: 'Tipos de Evento',  icon: Zap },
+    { id: 'eventTypes',  label: 'Ações de Jogo',    icon: Zap },
     { id: 'users',       label: 'Utilizadores',     icon: UsersRound },
     { id: 'escaloes',    label: 'Escalões',         icon: Shield,     section: 'Gerir Clube', clubOnly: true },
     { id: 'sa-jogadores',label: 'Jogadores',        icon: Users,      clubOnly: true },
@@ -45,7 +45,7 @@ const NAV = {
 const PAGE_TITLES = {
   dashboard: 'Dashboard', live: 'Jogos ao Vivo', jogos: 'Jogos',
   jogadores: 'Jogadores', equipas: 'Equipas', operadores: 'Operadores',
-  clubs: 'Clubes', modalities: 'Modalidades', eventTypes: 'Tipos de Evento',
+  clubs: 'Clubes', modalities: 'Modalidades', eventTypes: 'Ações de Jogo',
   users: 'Utilizadores', escaloes: 'Escalões',
   'sa-jogadores': 'Jogadores', 'sa-jogos': 'Jogos',
 }

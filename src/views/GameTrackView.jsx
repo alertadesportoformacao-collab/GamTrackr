@@ -102,11 +102,19 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       if (game.escaloes?.modality_id) etQuery = etQuery.eq('modality_id', game.escaloes.modality_id)
       const { data: all } = await etQuery
 
-      const types = all || []
+      const types = (all || []).filter((et) => et.ativo !== false)
+      const isLive = (et) => {
+        const m = et.modo || (et.registro_tipo === 'postmatch' ? 'pos_jogo' : 'live')
+        return m === 'live' || m === 'ambos'
+      }
+      const isPost = (et) => {
+        const m = et.modo || (et.registro_tipo === 'postmatch' ? 'pos_jogo' : 'live')
+        return m === 'pos_jogo' || m === 'ambos'
+      }
       setPlayers(playersData || [])
-      setTeamEvents(types.filter((et) => et.registro_tipo === 'realtime' && !et.requer_jogador))
-      setPlayerEvents(types.filter((et) => et.registro_tipo === 'realtime' && et.requer_jogador))
-      setPostMatchEvents(types.filter((et) => et.registro_tipo === 'postmatch'))
+      setTeamEvents(types.filter((et) => isLive(et) && !et.requer_jogador))
+      setPlayerEvents(types.filter((et) => isLive(et) && et.requer_jogador))
+      setPostMatchEvents(types.filter((et) => isPost(et)))
       await recalcCounts(game.id)
 
       const { data: fresh } = await supabase.from('games').select('status, youtube_url').eq('id', game.id).single()

@@ -8,7 +8,7 @@ import '../admin.css'
 const GLOBAL_NAV = [
   { key: 'clubs',      icon: '🏢', label: 'Clubes' },
   { key: 'modalities', icon: '⚽', label: 'Modalidades' },
-  { key: 'eventTypes', icon: '🎯', label: 'Tipos de Evento' },
+  { key: 'eventTypes', icon: '🎯', label: 'Ações de Jogo' },
   { key: 'users',      icon: '👤', label: 'Utilizadores' },
 ]
 
@@ -313,9 +313,17 @@ export function ModalitiesManager() {
   )
 }
 
-// ── Tipos de Evento ───────────────────────────────────────────────────────────
+// ── Ações de Jogo ─────────────────────────────────────────────────────────────
 
-const EMPTY_ET = { name: '', color: '#3b82f6', sort_order: '', registro_tipo: 'realtime', requer_jogador: true }
+const TIPO_LABELS = { imediato: 'Imediato', periodo: 'Período', outro: 'Outro' }
+const MODO_LABELS = { live: 'Live', pos_jogo: 'Pós-Jogo', ambos: 'Ambos' }
+const MODO_COLORS = {
+  live:     { bg: 'rgba(14,165,233,0.15)', color: '#38bdf8', border: 'rgba(14,165,233,0.3)' },
+  pos_jogo: { bg: 'rgba(167,139,250,0.15)', color: '#c4b5fd', border: 'rgba(167,139,250,0.3)' },
+  ambos:    { bg: 'rgba(52,211,153,0.15)', color: '#6ee7b7', border: 'rgba(52,211,153,0.3)' },
+}
+
+const EMPTY_ET = { name: '', color: '#3b82f6', sort_order: '', modo: 'live', tipo: 'imediato', requer_jogador: true, ativo: true }
 
 export function EventTypesManager() {
   const [eventTypes, setEventTypes] = useState([])
@@ -343,13 +351,20 @@ export function EventTypesManager() {
     setEditing(et)
     setForm({
       name: et.name, color: et.color, sort_order: String(et.sort_order ?? ''),
-      registro_tipo: et.registro_tipo || 'realtime',
+      modo: et.modo || (et.registro_tipo === 'postmatch' ? 'pos_jogo' : 'live'),
+      tipo: et.tipo || 'imediato',
       requer_jogador: et.requer_jogador !== false,
+      ativo: et.ativo !== false,
     })
     setErrors({})
     setOpen(true)
   }
   function close() { setOpen(false) }
+
+  async function toggleAtivo(et) {
+    await supabase.from('event_types').update({ ativo: !et.ativo }).eq('id', et.id)
+    load(selectedModalityId)
+  }
 
   async function save() {
     const e = {}; if (!form.name.trim()) e.name = 'Campo obrigatório'
@@ -358,8 +373,11 @@ export function EventTypesManager() {
       name: form.name, color: form.color,
       sort_order: parseInt(form.sort_order) || 0,
       modality_id: selectedModalityId,
-      registro_tipo: form.registro_tipo,
+      modo: form.modo,
+      tipo: form.tipo,
       requer_jogador: form.requer_jogador,
+      ativo: form.ativo,
+      registro_tipo: form.modo === 'pos_jogo' ? 'postmatch' : 'realtime',
     }
     editing
       ? await supabase.from('event_types').update(payload).eq('id', editing.id)
@@ -368,13 +386,18 @@ export function EventTypesManager() {
   }
 
   async function remove(id) {
-    if (!confirm('Eliminar tipo de evento?')) return
+    if (!confirm('Eliminar ação de jogo?')) return
     await supabase.from('event_types').delete().eq('id', id); load(selectedModalityId)
   }
 
+  const badgeStyle = (colors) => ({
+    fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+    background: colors.bg, color: colors.color, border: `1px solid ${colors.border}`,
+  })
+
   return (
     <>
-      <Modal open={open} onClose={close} title={editing ? 'Editar evento' : 'Novo tipo de evento'} width={480}>
+      <Modal open={open} onClose={close} title={editing ? 'Editar ação de jogo' : 'Nova ação de jogo'} width={520}>
         <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 72px 90px' }}>
           <Field label="Nome" required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
@@ -391,19 +414,38 @@ export function EventTypesManager() {
           </Field>
         </div>
         <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '0.75rem' }}>
-          <Field label="Registo">
-            <select className="admin-select" value={form.registro_tipo}
-              onChange={(e) => setForm({ ...form, registro_tipo: e.target.value })}>
-              <option value="realtime">Tempo real</option>
-              <option value="postmatch">Pós-jogo</option>
+          <Field label="Tipo">
+            <select className="admin-select" value={form.tipo}
+              onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
+              <option value="imediato">Imediato</option>
+              <option value="periodo">Período</option>
+              <option value="outro">Outro</option>
             </select>
           </Field>
+          <Field label="Modo">
+            <select className="admin-select" value={form.modo}
+              onChange={(e) => setForm({ ...form, modo: e.target.value })}>
+              <option value="live">Live</option>
+              <option value="pos_jogo">Pós-Jogo</option>
+              <option value="ambos">Ambos</option>
+            </select>
+          </Field>
+        </div>
+        <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '0.75rem' }}>
           <div className="admin-field">
-            <label className="admin-label">Opções</label>
+            <label className="admin-label">Requer Jogador</label>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.3rem', cursor: 'pointer' }}>
               <input type="checkbox" checked={form.requer_jogador}
                 onChange={(e) => setForm({ ...form, requer_jogador: e.target.checked })} />
-              <span style={{ fontSize: '0.85rem', color: '#374151' }}>Requer jogador</span>
+              <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>Sim</span>
+            </label>
+          </div>
+          <div className="admin-field">
+            <label className="admin-label">Estado</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.3rem', cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.ativo}
+                onChange={(e) => setForm({ ...form, ativo: e.target.checked })} />
+              <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>Ativo</span>
             </label>
           </div>
         </div>
@@ -412,7 +454,7 @@ export function EventTypesManager() {
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title">Tipos de Evento</h2>
+          <h2 className="admin-card-title">Ações de Jogo</h2>
           {selectedModalityId && <button className="btn btn-sm btn-primary" onClick={openNew}>+ Novo</button>}
         </div>
 
@@ -427,44 +469,62 @@ export function EventTypesManager() {
         </div>
 
         {!selectedModalityId
-          ? <div className="admin-prompt"><span style={{ fontSize: '2rem' }}>☝️</span><p>Seleciona uma modalidade para ver os seus eventos.</p></div>
+          ? <div className="admin-prompt"><span style={{ fontSize: '2rem' }}>☝️</span><p>Seleciona uma modalidade para ver as ações de jogo.</p></div>
           : eventTypes.length === 0
-            ? <div className="admin-empty">Ainda não há eventos para esta modalidade.</div>
+            ? <div className="admin-empty">Ainda não há ações de jogo para esta modalidade.</div>
             : (
               <div className="table-scroll">
                 <table className="admin-table">
                   <thead><tr>
                     <th style={{ width: 36 }} className="col-center">Cor</th>
                     <th>Nome</th>
-                    <th style={{ width: 110 }}>Registo</th>
-                    <th className="col-center" style={{ width: 80 }}>Jogador</th>
+                    <th style={{ width: 100 }}>Tipo</th>
+                    <th style={{ width: 90 }}>Modo</th>
+                    <th className="col-center" style={{ width: 70 }}>Jogador</th>
+                    <th className="col-center" style={{ width: 70 }}>Estado</th>
                     <th className="col-right" style={{ width: 60 }}>Ordem</th>
                     <th className="col-right">Ações</th>
                   </tr></thead>
                   <tbody>
-                    {eventTypes.map((et) => (
-                      <tr key={et.id}>
-                        <td className="col-center"><span className="color-dot" style={{ background: et.color }} /></td>
-                        <td className="cell-primary">{et.name}</td>
-                        <td>
-                          <span style={{
-                            fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                            background: et.registro_tipo === 'realtime' ? '#eff6ff' : '#f0fdf4',
-                            color: et.registro_tipo === 'realtime' ? '#1d4ed8' : '#166534',
-                          }}>
-                            {et.registro_tipo === 'realtime' ? 'Tempo real' : 'Pós-jogo'}
-                          </span>
-                        </td>
-                        <td className="col-center" style={{ color: et.requer_jogador ? '#16a34a' : '#94a3b8', fontWeight: 700 }}>
-                          {et.requer_jogador ? '✓' : '—'}
-                        </td>
-                        <td className="col-right cell-muted">{et.sort_order}</td>
-                        <td className="col-actions">
-                          <button className="btn btn-sm btn-secondary" onClick={() => openEdit(et)}>Editar</button>
-                          <button className="btn btn-sm btn-danger" onClick={() => remove(et.id)}>Eliminar</button>
-                        </td>
-                      </tr>
-                    ))}
+                    {eventTypes.map((et) => {
+                      const etModo = et.modo || (et.registro_tipo === 'postmatch' ? 'pos_jogo' : 'live')
+                      const etTipo = et.tipo || 'imediato'
+                      const etAtivo = et.ativo !== false
+                      return (
+                        <tr key={et.id} style={{ opacity: etAtivo ? 1 : 0.5 }}>
+                          <td className="col-center"><span className="color-dot" style={{ background: et.color }} /></td>
+                          <td className="cell-primary">{et.name}</td>
+                          <td>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                              background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                              {TIPO_LABELS[etTipo] || etTipo}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={badgeStyle(MODO_COLORS[etModo] || MODO_COLORS.live)}>
+                              {MODO_LABELS[etModo] || etModo}
+                            </span>
+                          </td>
+                          <td className="col-center" style={{ color: et.requer_jogador ? '#4ade80' : '#64748b', fontWeight: 700 }}>
+                            {et.requer_jogador ? '✓' : '—'}
+                          </td>
+                          <td className="col-center">
+                            <button onClick={() => toggleAtivo(et)} style={{
+                              fontSize: '0.68rem', fontWeight: 700, padding: '2px 10px', borderRadius: 20, cursor: 'pointer', border: 'none',
+                              background: etAtivo ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)',
+                              color: etAtivo ? '#4ade80' : '#f87171',
+                            }}>
+                              {etAtivo ? 'Ativo' : 'Inativo'}
+                            </button>
+                          </td>
+                          <td className="col-right cell-muted">{et.sort_order}</td>
+                          <td className="col-actions">
+                            <button className="btn btn-sm btn-secondary" onClick={() => openEdit(et)}>Editar</button>
+                            <button className="btn btn-sm btn-danger" onClick={() => remove(et.id)}>Eliminar</button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
