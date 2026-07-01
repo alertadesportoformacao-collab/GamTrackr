@@ -6,11 +6,16 @@ import '../game-track.css'
 export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole, initialMode = 'realtime' }) {
   const [mode, setMode] = useState(initialMode)
   const [players, setPlayers] = useState([])
+  const [periodoEvents, setPeriodoEvents] = useState([])
   const [teamEvents, setTeamEvents] = useState([])
   const [playerEvents, setPlayerEvents] = useState([])
   const [postMatchEvents, setPostMatchEvents] = useState([])
   const [registeredCounts, setRegisteredCounts] = useState({})
   const [pendingCount, setPendingCount] = useState(0)
+
+  // Períodos ativos: { [eventTypeId]: { startGameMinute, startWallTime } }
+  const [activePeriods, setActivePeriods] = useState({})
+  const [periodTick, setPeriodTick] = useState(0)
 
   const [timerState, setTimerState] = useState('stopped')
   const [elapsed, setElapsed] = useState(0)
@@ -24,6 +29,13 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   const [ytCollapsed, setYtCollapsed] = useState(false)
 
   const isLocked = gameStatus === 'finished' && userRole === 'club_opp'
+
+  // Tick do cronómetro dos períodos (1×/seg quando há períodos ativos)
+  useEffect(() => {
+    if (Object.keys(activePeriods).length === 0) return
+    const iv = setInterval(() => setPeriodTick((t) => t + 1), 1000)
+    return () => clearInterval(iv)
+  }, [activePeriods])
 
   async function applyYtUrl() {
     const id = extractYouTubeId(ytInput.trim())
@@ -111,10 +123,12 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         const m = et.modo || (et.registro_tipo === 'postmatch' ? 'pos_jogo' : 'live')
         return m === 'pos_jogo' || m === 'ambos'
       }
+      const liveTypes = types.filter(isLive)
       setPlayers(playersData || [])
-      setTeamEvents(types.filter((et) => isLive(et) && !et.requer_jogador))
-      setPlayerEvents(types.filter((et) => isLive(et) && et.requer_jogador))
-      setPostMatchEvents(types.filter((et) => isPost(et)))
+      setPeriodoEvents(liveTypes.filter((et) => et.tipo === 'periodo'))
+      setTeamEvents(liveTypes.filter((et) => !et.requer_jogador && et.tipo !== 'periodo'))
+      setPlayerEvents(liveTypes.filter((et) => et.requer_jogador && et.tipo !== 'periodo'))
+      setPostMatchEvents(types.filter(isPost))
       await recalcCounts(game.id)
 
       const { data: fresh } = await supabase.from('games').select('status, youtube_url').eq('id', game.id).single()
@@ -154,6 +168,35 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
     await db.pendingEvents.add(newEvent)
     await recalcCounts(game.id)
     syncPendingEvents()
+  }
+
+  async function togglePeriodo(et) {
+    if (isLocked) return
+    const active = activePeriods[et.id]
+    if (!active) {
+      setActivePeriods((prev) => ({
+        ...prev,
+        [et.id]: { startGameMinute: elapsed, startWallTime: Date.now() },
+      }))
+    } else {
+      const newEvent = {
+        id: crypto.randomUUID(),
+        game_id: game.id,
+        event_type_id: et.id,
+        player_id: null,
+        minute: active.startGameMinute,
+        minute_end: elapsed,
+        synced: 0,
+      }
+      await db.pendingEvents.add(newEvent)
+      await recalcCounts(game.id)
+      syncPendingEvents()
+      setActivePeriods((prev) => {
+        const next = { ...prev }
+        delete next[et.id]
+        return next
+      })
+    }
   }
 
   const activeEvents = mode === 'realtime' ? playerEvents : postMatchEvents
@@ -226,6 +269,40 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       {/* ── Aviso encerrado ── */}
       {isLocked && mode === 'realtime' && (
         <div className="gt-lock-banner">Jogo encerrado — o registo de eventos está bloqueado.</div>
+      )}
+
+      {/* ── Períodos ── */}
+      {mode === 'realtime' && periodoEvents.length > 0 && (
+        <div className="gt-periodo-events">
+          <div className="gt-team-label">Períodos</div>
+          <div className="gt-periodo-btns">
+            {periodoEvents.map((et) => {
+              const active = activePeriods[et.id]
+              const secs = active ? Math.floor((Date.now() - active.startWallTime) / 1000) : 0
+              const count = registeredCounts[`null_${et.id}`] || 0
+              return (
+                <button key={et.id} onClick={() => togglePeriodo(et)} disabled={isLocked}
+                  className="gt-periodo-btn"
+                  style={{
+                    background: active ? et.color : 'rgba(255,255,255,0.07)',
+                    border: `2px solid ${active ? et.color : 'rgba(255,255,255,0.18)'}`,
+                    opacity: isLocked ? 0.45 : 1,
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                  }}>
+                  <span>{et.name}</span>
+                  {active
+                    ? <span className="gt-periodo-timer">{formatTime(secs)}</span>
+                    : count > 0 && (
+                      <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '0 6px', fontSize: '0.78rem' }}>
+                        {count}×
+                      </span>
+                    )
+                  }
+                </button>
+              )
+            })}
+          </div>
+        </div>
       )}
 
       {/* ── Eventos de equipa ── */}
