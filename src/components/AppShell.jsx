@@ -183,7 +183,7 @@ export default function AppShell({ profile, onLogout }) {
           className="flex items-center justify-between px-4 h-16 flex-shrink-0"
           style={{ borderBottom: '1px solid var(--bd)' }}
         >
-          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ height: 44, width: 'auto' }} />
+          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ height: 52, width: 'auto', maxWidth: 180 }} />
           <button
             onClick={() => setSidebarOpen(false)}
             className="md:hidden hover:opacity-80 transition-opacity"
