@@ -13,13 +13,25 @@
 
 /* ── Header ── */
 .gt-header {
-  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.25);
+}
+
+.gt-header-main {
+  padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  flex-shrink: 0;
+}
+
+.gt-header-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 1rem 0.35rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
 }
 
 .gt-header-left {
@@ -74,22 +86,11 @@
   text-align: center;
 }
 
-/* ── Cronómetro ── */
-.gt-timer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
-  background: rgba(0,0,0,0.35);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-shrink: 0;
-}
-
+/* ── Cronómetro (embutido no header) ── */
 .gt-timer-value {
   font-variant-numeric: tabular-nums;
   font-weight: 800;
-  font-size: 2rem;
+  font-size: 1.4rem;
   letter-spacing: 0.05em;
   min-width: 5ch;
   text-align: center;
@@ -99,8 +100,6 @@
 .gt-timer-btns {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 /* ── Eventos de equipa ── */
@@ -145,23 +144,23 @@
   left: 0;
   background: #0a1e38;
   text-align: left;
-  padding: 7px 12px;
+  padding: 5px 10px;
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: rgba(255,255,255,0.4);
   white-space: nowrap;
-  min-width: 130px;
+  min-width: 120px;
   border-right: 1px solid rgba(255,255,255,0.1);
   z-index: 2;
 }
 
 /* Header: coluna de jogador */
 .gt-col-player {
-  padding: 6px 3px;
+  padding: 5px 2px;
   font-size: 0.68rem;
-  min-width: 64px;
+  min-width: 56px;
   text-align: center;
   color: rgba(255,255,255,0.6);
   font-weight: 600;
@@ -185,9 +184,9 @@
 
 /* Célula de evento sticky (tbody) */
 .gt-row-event {
-  padding: 3px 12px;
+  padding: 2px 10px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   white-space: nowrap;
   color: rgba(255,255,255,0.88);
   border-right: 1px solid rgba(255,255,255,0.08);
@@ -206,8 +205,8 @@
 
 .gt-event-btn {
   width: 100%;
-  min-height: 44px;
-  border-radius: 6px;
+  min-height: 36px;
+  border-radius: 5px;
   font-weight: 800;
   cursor: pointer;
   transition: background 0.1s, opacity 0.1s;
@@ -281,30 +280,30 @@
 
 /* Mobile portrait */
 @media (max-width: 600px) {
-  .gt-header { padding: 0.45rem 0.75rem; gap: 0.4rem; }
-  .gt-timer  { padding: 0.45rem 0.75rem; gap: 0.75rem; }
-  .gt-team-events { padding: 0.4rem 0.75rem; }
+  .gt-header-main { padding: 0.4rem 0.75rem; gap: 0.35rem; }
+  .gt-header-timer { padding: 0.15rem 0.75rem 0.3rem; gap: 0.45rem; }
+  .gt-team-events { padding: 0.35rem 0.75rem; }
   .gt-yt-bar { padding: 0.5rem 0.75rem; }
   .gt-yt-embed { padding: 0 0.75rem 0.6rem; }
 
   .gt-title   { font-size: 0.82rem; }
   .gt-subtitle { font-size: 0.65rem; }
 
-  .gt-timer-value { font-size: 1.6rem; }
+  .gt-timer-value { font-size: 1.2rem; }
 
   /* Grid mais compacto */
-  .gt-col-event  { min-width: 90px; padding: 5px 8px; font-size: 0.58rem; }
-  .gt-col-player { min-width: 44px; padding: 4px 1px; }
+  .gt-col-event  { min-width: 82px; padding: 4px 7px; font-size: 0.58rem; }
+  .gt-col-player { min-width: 42px; padding: 4px 1px; }
   .gt-player-num { font-size: 0.72rem; }
   .gt-player-name { display: none; } /* número basta em mobile */
-  .gt-row-event  { padding: 2px 8px; font-size: 0.72rem; }
+  .gt-row-event  { padding: 1px 7px; font-size: 0.7rem; }
   .gt-cell       { padding: 2px; }
-  .gt-event-btn  { min-height: 38px; border-radius: 5px; }
+  .gt-event-btn  { min-height: 34px; border-radius: 4px; }
 }
 
 /* Mobile muito pequeno */
 @media (max-width: 390px) {
-  .gt-col-event  { min-width: 76px; padding: 4px 6px; }
-  .gt-col-player { min-width: 38px; }
-  .gt-timer-value { font-size: 1.4rem; }
+  .gt-col-event  { min-width: 70px; padding: 3px 5px; }
+  .gt-col-player { min-width: 36px; }
+  .gt-timer-value { font-size: 1.1rem; }
 }

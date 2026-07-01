@@ -378,7 +378,7 @@ export function PlayersManager({ clubId }) {
 
 // ── Jogos ─────────────────────────────────────────────────────────────────────
 
-const EMPTY_GAME = { escalao_id: '', opponent: '', game_date: '', status: 'active' }
+const EMPTY_GAME = { escalao_id: '', opponent: '', game_date: '', status: 'active', youtube_url: '' }
 
 export function GamesManager({ clubId, onSelectGame }) {
   const [games, setGames] = useState([])
@@ -400,7 +400,7 @@ export function GamesManager({ clubId, onSelectGame }) {
   }
 
   function openNew()  { setEditing(null); setForm(EMPTY_GAME); setErrors({}); setOpen(true) }
-  function openEdit(g){ setEditing(g); setForm({ escalao_id: g.escalao_id || '', opponent: g.opponent, game_date: (g.game_date || '').slice(0, 10) }); setErrors({}); setOpen(true) }
+  function openEdit(g){ setEditing(g); setForm({ escalao_id: g.escalao_id || '', opponent: g.opponent, game_date: (g.game_date || '').slice(0, 10), youtube_url: g.youtube_url || '' }); setErrors({}); setOpen(true) }
   function close()    { setOpen(false) }
 
   async function save() {
@@ -409,7 +409,7 @@ export function GamesManager({ clubId, onSelectGame }) {
     if (!form.opponent.trim()) e.opponent   = 'Campo obrigatório'
     if (!form.game_date)       e.game_date  = 'Campo obrigatório'
     setErrors(e); if (Object.keys(e).length) return
-    const payload = { escalao_id: form.escalao_id, opponent: form.opponent, game_date: form.game_date }
+    const payload = { escalao_id: form.escalao_id, opponent: form.opponent, game_date: form.game_date, youtube_url: form.youtube_url || null }
     editing
       ? await supabase.from('games').update(payload).eq('id', editing.id)
       : await supabase.from('games').insert(payload)
@@ -440,6 +440,13 @@ export function GamesManager({ clubId, onSelectGame }) {
             <Field label="Adversário" required error={errors.opponent}>
               <input autoFocus className={`admin-input${errors.opponent ? ' input-error' : ''}`} value={form.opponent}
                 onChange={(e) => setForm({ ...form, opponent: e.target.value })} placeholder="Ex: FC Porto" />
+            </Field>
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Field label="URL YouTube (opcional)">
+              <input className="admin-input" value={form.youtube_url}
+                onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
+                placeholder="https://www.youtube.com/watch?v=..." />
             </Field>
           </div>
         </div>
@@ -474,6 +481,7 @@ export function GamesManager({ clubId, onSelectGame }) {
                     </td>
                     <td className="col-actions">
                       <button className="btn btn-sm btn-success" onClick={() => onSelectGame(g)}>▶ Registar</button>
+                      <button className="btn btn-sm" style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }} onClick={() => onSelectGame(g, 'postmatch')}>📊 Pós-Jogo</button>
                       <button className="btn btn-sm btn-secondary" onClick={() => openEdit(g)}>Editar</button>
                       <button className="btn btn-sm btn-danger" onClick={() => remove(g.id)}>Eliminar</button>
                     </td>

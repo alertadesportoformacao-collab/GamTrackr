@@ -56,6 +56,7 @@ export default function AppShell({ profile, onLogout }) {
   const defaultTab = profile.role === 'club_opp' ? 'jogos' : 'dashboard'
   const [activeTab, setActiveTab]     = useState(defaultTab)
   const [selectedGame, setSelectedGame] = useState(null)
+  const [selectedMode, setSelectedMode] = useState('realtime')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isOnline, setIsOnline]       = useState(navigator.onLine)
   // super_admin club management
@@ -74,11 +75,17 @@ export default function AppShell({ profile, onLogout }) {
     }
   }, [profile.role])
 
+  function openGame(game, mode = 'realtime') {
+    setSelectedGame(game)
+    setSelectedMode(mode)
+  }
+
   // Full-screen game tracking
   if (selectedGame) {
     return (
       <GameTrackView
         game={selectedGame}
+        initialMode={selectedMode}
         onBack={() => setSelectedGame(null)}
         onLogout={onLogout}
         isOnline={isOnline}
@@ -100,14 +107,14 @@ export default function AppShell({ profile, onLogout }) {
 
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard profile={profile} onSelectGame={setSelectedGame} />
+        return <Dashboard profile={profile} onSelectGame={openGame} />
 
       case 'live':
       case 'jogos':
       case 'sa-jogos':
-        if (profile.role === 'club_opp') return wrap(<ClubOppGames clubId={clubId} onSelectGame={setSelectedGame} />)
+        if (profile.role === 'club_opp') return wrap(<ClubOppGames clubId={clubId} onSelectGame={openGame} />)
         if (profile.role === 'super_admin' && !managedClubId) return <ClubRequired />
-        return wrap(<GamesManager clubId={clubId} onSelectGame={setSelectedGame} />)
+        return wrap(<GamesManager clubId={clubId} onSelectGame={openGame} />)
 
       case 'jogadores':
         return wrap(<PlayersManager clubId={clubId} />)

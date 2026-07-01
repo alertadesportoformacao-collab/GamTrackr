@@ -3,8 +3,8 @@ import { supabase } from '../supabaseClient'
 import { db } from '../db'
 import '../game-track.css'
 
-export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole }) {
-  const [mode, setMode] = useState('realtime')
+export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole, initialMode = 'realtime' }) {
+  const [mode, setMode] = useState(initialMode)
   const [players, setPlayers] = useState([])
   const [teamEvents, setTeamEvents] = useState([])
   const [playerEvents, setPlayerEvents] = useState([])
@@ -156,75 +156,68 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
 
       {/* ── Header ── */}
       <div className="gt-header">
-        <div className="gt-header-left">
-          <button onClick={mode === 'postmatch' ? () => setMode('realtime') : onBack} style={btnStyle}>
-            ← {mode === 'postmatch' ? 'Jogo' : 'Voltar'}
-          </button>
-          <div className="gt-title-block">
-            <div className="gt-title">{game.escaloes?.name} vs {game.opponent}</div>
-            <div className="gt-subtitle">
-              {new Date(game.game_date).toLocaleDateString('pt-PT')}
-              {mode === 'postmatch' && <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· Pós-Jogo</span>}
+        <div className="gt-header-main">
+          <div className="gt-header-left">
+            <button onClick={onBack} style={btnStyle}>← Voltar</button>
+            <div className="gt-title-block">
+              <div className="gt-title">{game.escaloes?.name} vs {game.opponent}</div>
+              <div className="gt-subtitle">
+                {new Date(game.game_date).toLocaleDateString('pt-PT')}
+                {mode === 'postmatch' && <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· Pós-Jogo</span>}
+              </div>
             </div>
+          </div>
+
+          <div className="gt-header-right">
+            <span style={{ fontSize: '0.72rem', color: isOnline ? '#4ade80' : '#f87171', fontWeight: 700 }}>
+              {isOnline ? '● Online' : '● Offline'}
+            </span>
+            {pendingCount > 0 && (
+              <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+                {pendingCount} sync
+              </span>
+            )}
+            {gameStatus === 'finished' ? (
+              <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
+                ⏹ Encerrado
+              </span>
+            ) : (
+              mode === 'realtime' && (
+                <button onClick={handleEndGame}
+                  style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
+                  ⏹ Encerrar
+                </button>
+              )
+            )}
+            <button onClick={onLogout} style={btnStyle}>Sair</button>
           </div>
         </div>
 
-        <div className="gt-header-right">
-          <span style={{ fontSize: '0.72rem', color: isOnline ? '#4ade80' : '#f87171', fontWeight: 700 }}>
-            {isOnline ? '● Online' : '● Offline'}
-          </span>
-          {pendingCount > 0 && (
-            <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
-              {pendingCount} sync
-            </span>
-          )}
-          {gameStatus === 'finished' ? (
-            <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
-              ⏹ Encerrado
-            </span>
-          ) : (
-            mode === 'realtime' && (
-              <button onClick={handleEndGame}
-                style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
-                ⏹ Encerrar
-              </button>
-            )
-          )}
-          {mode === 'realtime' && (
-            <button onClick={() => setMode('postmatch')}
-              style={{ ...btnStyle, background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }}>
-              📊 Pós-Jogo
-            </button>
-          )}
-          <button onClick={onLogout} style={btnStyle}>Sair</button>
-        </div>
+        {mode === 'realtime' && (
+          <div className="gt-header-timer">
+            <span className="gt-timer-value" style={{ color: timerColor }}>{formatTime(elapsed)}</span>
+            <div className="gt-timer-btns">
+              {!isLocked && (timerState !== 'running'
+                ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
+                    {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
+                  </button>
+                : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
+                    ⏸ Pausar
+                  </button>
+              )}
+              {!isLocked && timerState !== 'stopped' && (
+                <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                  ⏹ Parar
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Aviso encerrado ── */}
       {isLocked && mode === 'realtime' && (
         <div className="gt-lock-banner">Jogo encerrado — o registo de eventos está bloqueado.</div>
-      )}
-
-      {/* ── Cronómetro ── */}
-      {mode === 'realtime' && (
-        <div className="gt-timer">
-          <span className="gt-timer-value" style={{ color: timerColor }}>{formatTime(elapsed)}</span>
-          <div className="gt-timer-btns">
-            {!isLocked && (timerState !== 'running'
-              ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
-                  {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
-                </button>
-              : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
-                  ⏸ Pausar
-                </button>
-            )}
-            {!isLocked && timerState !== 'stopped' && (
-              <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                ⏹ Parar
-              </button>
-            )}
-          </div>
-        </div>
       )}
 
       {/* ── Eventos de equipa ── */}
@@ -388,8 +381,8 @@ const btnStyle = {
 }
 
 const timerBtn = {
-  border: 'none', borderRadius: 8,
-  padding: '0.45rem 1.1rem',
-  cursor: 'pointer', fontSize: '0.88rem',
+  border: 'none', borderRadius: 6,
+  padding: '0.28rem 0.75rem',
+  cursor: 'pointer', fontSize: '0.82rem',
   fontWeight: 700, whiteSpace: 'nowrap',
 }
