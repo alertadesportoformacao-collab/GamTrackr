@@ -489,6 +489,7 @@ function UsersManager() {
   const [users, setUsers] = useState([])
   const [clubs, setClubs] = useState([])
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_USER)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -504,27 +505,44 @@ function UsersManager() {
     setUsers(data || [])
   }
 
-  function openNew() { setForm(EMPTY_USER); setErrors({}); setApiError(''); setOpen(true) }
-  function close()   { setOpen(false) }
+  function openNew() {
+    setEditing(null); setForm(EMPTY_USER); setErrors({}); setApiError(''); setOpen(true)
+  }
+  function openEdit(u) {
+    setEditing(u)
+    setForm({ name: u.name || '', email: u.email || '', password: '', role: u.role, club_id: u.club_id || '' })
+    setErrors({}); setApiError(''); setOpen(true)
+  }
+  function close() { setOpen(false) }
 
   function validate() {
     const e = {}
-    if (!form.name.trim())     e.name     = 'Campo obrigatório'
-    if (!form.email.trim())    e.email    = 'Campo obrigatório'
-    if (!form.password.trim()) e.password = 'Campo obrigatório'
-    else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
+    if (!form.name.trim())  e.name  = 'Campo obrigatório'
+    if (!form.email.trim()) e.email = 'Campo obrigatório'
+    if (!editing) {
+      if (!form.password.trim()) e.password = 'Campo obrigatório'
+      else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
+    } else if (form.password && form.password.length < 6) {
+      e.password = 'Mínimo 6 caracteres'
+    }
     setErrors(e); return !Object.keys(e).length
   }
 
   async function save() {
     if (!validate()) return
     setSaving(true); setApiError('')
-    const { error: fnError } = await supabase.functions.invoke('create-user', {
-      body: { name: form.name, email: form.email, password: form.password, role: form.role, club_id: form.role !== 'super_admin' ? (form.club_id || null) : null },
-    })
-    if (fnError) setApiError(fnError.message)
-    else { close(); load() }
-    setSaving(false)
+    if (editing) {
+      const body = { userId: editing.id, name: form.name, email: form.email, role: form.role, club_id: form.club_id }
+      if (form.password) body.password = form.password
+      const { error: fnError } = await supabase.functions.invoke('update-user', { body })
+      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+    } else {
+      const { error: fnError } = await supabase.functions.invoke('create-user', {
+        body: { name: form.name, email: form.email, password: form.password, role: form.role, club_id: form.role !== 'super_admin' ? (form.club_id || null) : null },
+      })
+      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+    }
+    close(); load(); setSaving(false)
   }
 
   async function remove(userId) {
@@ -534,7 +552,7 @@ function UsersManager() {
 
   return (
     <>
-      <Modal open={open} onClose={close} title="Novo utilizador" width={560}>
+      <Modal open={open} onClose={close} title={editing ? 'Editar utilizador' : 'Novo utilizador'} width={560}>
         <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <Field label="Nome" required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
@@ -544,9 +562,10 @@ function UsersManager() {
             <input className={`admin-input${errors.email ? ' input-error' : ''}`} type="email" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="utilizador@exemplo.com" />
           </Field>
-          <Field label="Password" required error={errors.password}>
+          <Field label={editing ? 'Nova password' : 'Password'} required={!editing} error={errors.password}>
             <input className={`admin-input${errors.password ? ' input-error' : ''}`} type="password" value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder={editing ? 'Deixar vazio para não alterar' : 'Mínimo 6 caracteres'} />
           </Field>
           <Field label="Tipo" required>
             <select className="admin-select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value, club_id: '' })}>
@@ -565,7 +584,7 @@ function UsersManager() {
           )}
         </div>
         {apiError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#dc2626', background: '#fee2e2', padding: '0.5rem 0.75rem', borderRadius: 6 }}>{apiError}</p>}
-        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel="Criar utilizador" />
+        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? 'Guardar' : 'Criar utilizador'} />
       </Modal>
 
       <div className="admin-card">
@@ -588,6 +607,7 @@ function UsersManager() {
                     <td><span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 9px', borderRadius: 20, ...ROLE_STYLE[u.role] }}>{ROLE_LABELS[u.role] ?? u.role}</span></td>
                     <td className="cell-muted">{u.clubs?.name || '—'}</td>
                     <td className="col-actions">
+                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(u)}>Editar</button>
                       <button className="btn btn-sm btn-danger" onClick={() => remove(u.id)}>Eliminar</button>
                     </td>
                   </tr>

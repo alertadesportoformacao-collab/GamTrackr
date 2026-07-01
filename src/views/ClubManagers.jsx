@@ -487,6 +487,7 @@ export function GamesManager({ clubId, onSelectGame }) {
 export function OperadoresManager({ clubId }) {
   const [users, setUsers] = useState([])
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -503,27 +504,42 @@ export function OperadoresManager({ clubId }) {
     await supabase.from('profiles').update({ can_open_games: !current }).eq('id', userId); load()
   }
 
-  function openNew() { setForm({ name: '', email: '', password: '' }); setErrors({}); setApiError(''); setOpen(true) }
-  function close()   { setOpen(false) }
+  function openNew() {
+    setEditing(null); setForm({ name: '', email: '', password: '' }); setErrors({}); setApiError(''); setOpen(true)
+  }
+  function openEdit(u) {
+    setEditing(u); setForm({ name: u.name || '', email: u.email || '', password: '' }); setErrors({}); setApiError(''); setOpen(true)
+  }
+  function close() { setOpen(false) }
 
   function validate() {
     const e = {}
-    if (!form.name.trim())     e.name     = 'Campo obrigatório'
-    if (!form.email.trim())    e.email    = 'Campo obrigatório'
-    if (!form.password.trim()) e.password = 'Campo obrigatório'
-    else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
+    if (!form.name.trim())  e.name  = 'Campo obrigatório'
+    if (!form.email.trim()) e.email = 'Campo obrigatório'
+    if (!editing) {
+      if (!form.password.trim()) e.password = 'Campo obrigatório'
+      else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
+    } else if (form.password && form.password.length < 6) {
+      e.password = 'Mínimo 6 caracteres'
+    }
     setErrors(e); return !Object.keys(e).length
   }
 
   async function save() {
     if (!validate()) return
     setSaving(true); setApiError('')
-    const { error: fnError } = await supabase.functions.invoke('create-user', {
-      body: { name: form.name, email: form.email, password: form.password, role: 'club_opp', club_id: clubId },
-    })
-    if (fnError) setApiError(fnError.message)
-    else { close(); load() }
-    setSaving(false)
+    if (editing) {
+      const body = { userId: editing.id, name: form.name, email: form.email }
+      if (form.password) body.password = form.password
+      const { error: fnError } = await supabase.functions.invoke('update-user', { body })
+      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+    } else {
+      const { error: fnError } = await supabase.functions.invoke('create-user', {
+        body: { name: form.name, email: form.email, password: form.password, role: 'club_opp', club_id: clubId },
+      })
+      if (fnError) { setApiError(fnError.message); setSaving(false); return }
+    }
+    close(); load(); setSaving(false)
   }
 
   async function remove(userId) {
@@ -533,7 +549,7 @@ export function OperadoresManager({ clubId }) {
 
   return (
     <>
-      <Modal open={open} onClose={close} title="Novo operador" width={480}>
+      <Modal open={open} onClose={close} title={editing ? 'Editar operador' : 'Novo operador'} width={480}>
         <div className="admin-form-grid">
           <Field label="Nome" required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
@@ -543,13 +559,14 @@ export function OperadoresManager({ clubId }) {
             <input className={`admin-input${errors.email ? ' input-error' : ''}`} type="email" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="operador@exemplo.com" />
           </Field>
-          <Field label="Password" required error={errors.password}>
+          <Field label={editing ? 'Nova password' : 'Password'} required={!editing} error={errors.password}>
             <input className={`admin-input${errors.password ? ' input-error' : ''}`} type="password" value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder={editing ? 'Deixar vazio para não alterar' : 'Mínimo 6 caracteres'} />
           </Field>
         </div>
         {apiError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#dc2626', background: '#fee2e2', padding: '0.5rem 0.75rem', borderRadius: 6 }}>{apiError}</p>}
-        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel="Criar operador" />
+        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? 'Guardar' : 'Criar operador'} />
       </Modal>
 
       <div className="admin-card">
@@ -581,6 +598,7 @@ export function OperadoresManager({ clubId }) {
                       </button>
                     </td>
                     <td className="col-actions">
+                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(u)}>Editar</button>
                       <button className="btn btn-sm btn-danger" onClick={() => remove(u.id)}>Eliminar</button>
                     </td>
                   </tr>
