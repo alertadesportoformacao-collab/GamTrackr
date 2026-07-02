@@ -19,9 +19,31 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   const [activePeriods, setActivePeriods] = useState({})
   const [periodTick, setPeriodTick] = useState(0)
 
-  const [timerState, setTimerState] = useState('stopped')
-  const [elapsed, setElapsed] = useState(0)
+  const TIMER_KEY = `gt-timer-${game.id}`
+
+  const [timerState, setTimerState] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`gt-timer-${game.id}`))
+      if (!s || s.state === 'stopped') return 'stopped'
+      return 'paused' // sempre restaurar como pausado
+    } catch { return 'stopped' }
+  })
+
+  const [elapsed, setElapsed] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(`gt-timer-${game.id}`))
+      if (!s) return 0
+      if (s.state === 'running') {
+        return s.baseElapsed + Math.floor((Date.now() - s.startWallTime) / 1000)
+      }
+      return s.baseElapsed || 0
+    } catch { return 0 }
+  })
+
   const intervalRef = useRef(null)
+  const timerStateRef = useRef(timerState)
+  const elapsedRef = useRef(elapsed)
+  useEffect(() => { timerStateRef.current = timerState }, [timerState])
 
   const [gameStatus, setGameStatus] = useState(game.status || 'active')
 
@@ -51,23 +73,54 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   async function handleEndGame() {
     if (!confirm(t('confirm.end_game'))) return
     const { error } = await supabase.from('games').update({ status: 'finished' }).eq('id', game.id)
-    if (!error) setGameStatus('finished')
+    if (!error) {
+      setGameStatus('finished')
+      clearInterval(intervalRef.current)
+      localStorage.removeItem(TIMER_KEY)
+      setTimerState('stopped')
+      timerStateRef.current = 'stopped'
+    }
   }
 
-  useEffect(() => () => clearInterval(intervalRef.current), [])
+  // pausa automática ao sair da página
+  useEffect(() => {
+    return () => {
+      clearInterval(intervalRef.current)
+      if (timerStateRef.current === 'running') {
+        localStorage.setItem(
+          `gt-timer-${game.id}`,
+          JSON.stringify({ state: 'paused', baseElapsed: elapsedRef.current })
+        )
+      }
+    }
+  }, [game.id])
 
   function startTimer() {
+    const base = elapsedRef.current
+    const now = Date.now()
+    localStorage.setItem(
+      TIMER_KEY,
+      JSON.stringify({ state: 'running', baseElapsed: base, startWallTime: now })
+    )
     setTimerState('running')
-    intervalRef.current = setInterval(() => setElapsed((s) => s + 1), 1000)
+    timerStateRef.current = 'running'
+    intervalRef.current = setInterval(() => {
+      setElapsed((s) => {
+        const next = s + 1
+        elapsedRef.current = next
+        return next
+      })
+    }, 1000)
   }
+
   function pauseTimer() {
+    clearInterval(intervalRef.current)
+    localStorage.setItem(
+      TIMER_KEY,
+      JSON.stringify({ state: 'paused', baseElapsed: elapsedRef.current })
+    )
     setTimerState('paused')
-    clearInterval(intervalRef.current)
-  }
-  function stopTimer() {
-    setTimerState('stopped')
-    clearInterval(intervalRef.current)
-    setElapsed(0)
+    timerStateRef.current = 'paused'
   }
   function formatTime(s) {
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -260,11 +313,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
                   {t('action.pause_timer')}
                 </button>
-            )}
-            {!isLocked && timerState !== 'stopped' && (
-              <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                {t('action.stop_timer')}
-              </button>
             )}
 
             {/* Separador visual */}
