@@ -245,26 +245,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
           </div>
         </div>
 
-        {mode === 'realtime' && (
-          <div className="gt-header-timer">
-            <span className="gt-timer-value" style={{ color: timerColor }}>{formatTime(elapsed)}</span>
-            <div className="gt-timer-btns">
-              {!isLocked && (timerState !== 'running'
-                ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
-                    {timerState === 'paused' ? t('action.resume_timer') : t('action.start_timer')}
-                  </button>
-                : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
-                    {t('action.pause_timer')}
-                  </button>
-              )}
-              {!isLocked && timerState !== 'stopped' && (
-                <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  {t('action.stop_timer')}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Aviso encerrado ── */}
@@ -272,11 +252,34 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
         <div className="gt-lock-banner">{t('gt.lock_banner')}</div>
       )}
 
-      {/* ── Períodos ── */}
-      {mode === 'realtime' && periodoEvents.length > 0 && (
+      {/* ── Períodos + cronómetro (mesma linha) ── */}
+      {mode === 'realtime' && (
         <div className="gt-periodo-events">
           <div className="gt-team-label">{t('gt.periods')}</div>
           <div className="gt-periodo-btns">
+
+            {/* Cronómetro */}
+            <span className="gt-timer-value" style={{ color: timerColor }}>{formatTime(elapsed)}</span>
+            {!isLocked && (timerState !== 'running'
+              ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
+                  {timerState === 'paused' ? t('action.resume_timer') : t('action.start_timer')}
+                </button>
+              : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
+                  {t('action.pause_timer')}
+                </button>
+            )}
+            {!isLocked && timerState !== 'stopped' && (
+              <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                {t('action.stop_timer')}
+              </button>
+            )}
+
+            {/* Separador visual */}
+            {periodoEvents.length > 0 && (
+              <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.15)', margin: '0 0.25rem', flexShrink: 0 }} />
+            )}
+
+            {/* Botões de período */}
             {periodoEvents.map((et) => {
               const active = activePeriods[et.id]
               const secs = active ? Math.floor((Date.now() - active.startWallTime) / 1000) : 0
