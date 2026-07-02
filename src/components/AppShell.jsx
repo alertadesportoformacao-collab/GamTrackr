@@ -87,14 +87,16 @@ export default function AppShell({ profile, onLogout }) {
 
   if (selectedGame) {
     return (
-      <GameTrackView
-        game={selectedGame}
-        initialMode={selectedMode}
-        onBack={() => setSelectedGame(null)}
-        onLogout={onLogout}
-        isOnline={isOnline}
-        userRole={profile.role}
-      />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'var(--bg)' }}>
+        <GameTrackView
+          game={selectedGame}
+          initialMode={selectedMode}
+          onBack={() => setSelectedGame(null)}
+          onLogout={onLogout}
+          isOnline={isOnline}
+          userRole={profile.role}
+        />
+      </div>
     )
   }
 

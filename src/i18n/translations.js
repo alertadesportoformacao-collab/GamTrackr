@@ -213,6 +213,7 @@ const T = {
     'gt.remove_video':                'Remover vídeo',
     'gt.status_finished':             '⏹ Encerrado',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Rode o dispositivo para horizontal',
 
     'label.date':                     'Data',
     'label.opponent':                 'Adversário',
@@ -428,6 +429,7 @@ const T = {
     'gt.remove_video':                'Remover vídeo',
     'gt.status_finished':             '⏹ Encerrado',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Vire o dispositivo para horizontal',
 
     'label.date':                     'Data',
     'label.opponent':                 'Adversário',
@@ -643,6 +645,7 @@ const T = {
     'gt.remove_video':                'Eliminar vídeo',
     'gt.status_finished':             '⏹ Terminado',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Gira el dispositivo a horizontal',
 
     'label.date':                     'Fecha',
     'label.opponent':                 'Rival',
@@ -858,6 +861,7 @@ const T = {
     'gt.remove_video':                'Supprimer la vidéo',
     'gt.status_finished':             '⏹ Terminé',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Faites pivoter l\'appareil en mode paysage',
 
     'label.date':                     'Date',
     'label.opponent':                 'Adversaire',
@@ -1073,6 +1077,7 @@ const T = {
     'gt.remove_video':                'Remove video',
     'gt.status_finished':             '⏹ Finished',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Rotate device to landscape',
 
     'label.date':                     'Date',
     'label.opponent':                 'Opponent',
@@ -1288,6 +1293,7 @@ const T = {
     'gt.remove_video':                'Video entfernen',
     'gt.status_finished':             '⏹ Beendet',
     'gt.sync_pending':                (n) => `${n} sync`,
+    'gt.rotate_device':               'Gerät ins Querformat drehen',
 
     'label.date':                     'Datum',
     'label.opponent':                 'Gegner',

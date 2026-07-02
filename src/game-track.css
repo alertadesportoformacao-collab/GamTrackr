@@ -1,5 +1,10 @@
 /* ── GamTrackr – Live Tracking Screen ─────────────────────────────────────── */
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* ── Container ── */
 .gt-wrap {
   height: 100vh;

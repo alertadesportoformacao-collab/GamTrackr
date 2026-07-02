@@ -46,6 +46,32 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   useEffect(() => { timerStateRef.current = timerState }, [timerState])
 
   const [gameStatus, setGameStatus] = useState(game.status || 'active')
+  const [showRotate, setShowRotate] = useState(false)
+
+  // Tablet: fullscreen + lock landscape + portrait overlay
+  useEffect(() => {
+    const maxDim = Math.max(window.innerWidth, window.innerHeight)
+    const isTablet = maxDim >= 768 && navigator.maxTouchPoints > 0
+    if (!isTablet) return
+
+    document.documentElement.requestFullscreen?.().catch(() => {})
+    screen.orientation?.lock?.('landscape-primary').catch(() => {})
+
+    const checkOrientation = () => {
+      const portrait = window.innerHeight > window.innerWidth
+      setShowRotate(portrait)
+    }
+    checkOrientation()
+    window.addEventListener('resize', checkOrientation)
+    window.addEventListener('orientationchange', checkOrientation)
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation)
+      window.removeEventListener('orientationchange', checkOrientation)
+      screen.orientation?.unlock?.()
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {})
+    }
+  }, [])
 
   const initialYtId = game.youtube_url ? extractYouTubeId(game.youtube_url) : null
   const [ytInput, setYtInput]         = useState(game.youtube_url || '')
@@ -258,6 +284,20 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
 
   return (
     <div className="gt-wrap">
+      {showRotate && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'var(--bg)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: '1.25rem',
+        }}>
+          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ width: 180, opacity: 0.85 }} />
+          <div style={{ fontSize: '3.5rem', animation: 'spin 2s linear infinite' }}>↻</div>
+          <p style={{ color: 'var(--tx)', fontWeight: 700, fontSize: '1.1rem', textAlign: 'center', padding: '0 2rem' }}>
+            {t('gt.rotate_device')}
+          </p>
+        </div>
+      )}
 
       {/* ── Header ── */}
       <div className="gt-header">
