@@ -66,7 +66,7 @@ export default function LoginView({ onLogin, loginError }) {
 
         {/* Card */}
         <div className="backdrop-blur-xl rounded-2xl p-8 shadow-2xl shadow-black/40"
-          style={{ background: 'var(--inp)', border: '1px solid var(--bd)' }}>
+          style={{ background: 'var(--bg-c)', border: '1px solid var(--bd)' }}>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -120,8 +120,8 @@ export default function LoginView({ onLogin, loginError }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/25 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: '#0ea5e9' }}
+              className="w-full font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/25 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: '#0ea5e9', color: 'white' }}
             >
               {loading ? t('login.loading') : t('login.submit')}
             </button>
