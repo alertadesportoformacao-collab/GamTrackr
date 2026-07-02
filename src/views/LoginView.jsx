@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useLanguage } from '../LanguageContext'
 
 export default function LoginView({ onLogin, loginError }) {
+  const { t, lang, setLanguage, languages } = useLanguage()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword]     = useState('')
   const [loading, setLoading]       = useState(false)
@@ -14,13 +16,12 @@ export default function LoginView({ onLogin, loginError }) {
 
     let email = identifier.trim()
 
-    // Se não contém @ é um username — resolver para email
     if (!email.includes('@')) {
       const { data, error } = await supabase.rpc('get_email_by_username', {
         p_username: email.toLowerCase(),
       })
       if (error || !data) {
-        setLocalError('Utilizador não encontrado.')
+        setLocalError(t('login.user_not_found'))
         setLoading(false)
         return
       }
@@ -34,7 +35,8 @@ export default function LoginView({ onLogin, loginError }) {
   const error = localError || loginError
 
   return (
-    <div className="min-h-screen bg-[#070c14] flex items-center justify-center relative overflow-hidden px-4">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4"
+      style={{ background: 'var(--bg)' }}>
 
       {/* Background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -50,24 +52,48 @@ export default function LoginView({ onLogin, loginError }) {
       <div className="relative z-10 w-full max-w-[420px]">
 
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <img
             src="/gamtrakr-logo.png"
             alt="GamTrakr"
             className="mx-auto mb-2 drop-shadow-[0_0_32px_rgba(56,189,248,0.35)]"
             style={{ maxHeight: 400, width: 'auto' }}
           />
-          <p className="text-slate-500 mt-3 text-sm font-medium tracking-wide">Every Play. Every Moment.</p>
+          <p className="mt-3 text-sm font-medium tracking-wide" style={{ color: 'var(--tx4)' }}>
+            {t('login.subtitle')}
+          </p>
+        </div>
+
+        {/* Language selector */}
+        <div className="flex flex-wrap justify-center gap-1.5 mb-5">
+          {languages.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => setLanguage(l.code)}
+              title={l.label}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all"
+              style={{
+                background: lang === l.code ? 'rgba(14,165,233,0.2)' : 'var(--inp)',
+                color: lang === l.code ? '#38bdf8' : 'var(--tx4)',
+                border: `1px solid ${lang === l.code ? 'rgba(14,165,233,0.4)' : 'var(--bd)'}`,
+                cursor: 'pointer',
+              }}
+            >
+              <span>{l.flag}</span>
+              <span>{l.short}</span>
+            </button>
+          ))}
         </div>
 
         {/* Card */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-8 shadow-2xl shadow-black/40">
-          <h2 className="text-lg font-bold text-white mb-6">Entrar</h2>
+        <div className="backdrop-blur-xl rounded-2xl p-8 shadow-2xl shadow-black/40"
+          style={{ background: 'var(--inp)', border: '1px solid var(--bd)' }}>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[0.68rem] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Email ou Username
+              <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
+                style={{ color: 'var(--tx4)' }}>
+                {t('login.identifier')}
               </label>
               <input
                 type="text"
@@ -75,27 +101,39 @@ export default function LoginView({ onLogin, loginError }) {
                 onChange={(e) => setIdentifier(e.target.value)}
                 autoFocus
                 autoComplete="username"
-                placeholder="utilizador ou email@exemplo.com"
-                className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                placeholder={t('login.identifier_ph')}
+                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
+                style={{
+                  background: 'var(--inp)',
+                  border: '1px solid var(--bd3)',
+                  color: 'var(--tx)',
+                }}
               />
             </div>
 
             <div>
-              <label className="block text-[0.68rem] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Password
+              <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
+                style={{ color: 'var(--tx4)' }}>
+                {t('login.password')}
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="••••••••"
-                className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                placeholder={t('login.password_ph')}
+                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
+                style={{
+                  background: 'var(--inp)',
+                  border: '1px solid var(--bd3)',
+                  color: 'var(--tx)',
+                }}
               />
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
+              <div className="rounded-xl px-4 py-3 text-sm"
+                style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
                 {error}
               </div>
             )}
@@ -103,15 +141,16 @@ export default function LoginView({ onLogin, loginError }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-400 active:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/25 mt-2"
+              className="w-full text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sky-500/25 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: '#0ea5e9' }}
             >
-              {loading ? 'A entrar…' : 'Entrar'}
+              {loading ? t('login.loading') : t('login.submit')}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-slate-700 text-xs mt-6">
-          GamTrakr © {new Date().getFullYear()}
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--tx5)' }}>
+          {t('footer.copy', new Date().getFullYear())}
         </p>
       </div>
     </div>

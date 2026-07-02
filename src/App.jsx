@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 import AppShell from './components/AppShell'
 import LoginView from './views/LoginView'
 import { ThemeProvider } from './ThemeContext'
+import { LanguageProvider } from './LanguageContext'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -70,7 +71,11 @@ function App() {
 }
 
 function AppWithTheme() {
-  return <ThemeProvider><App /></ThemeProvider>
+  return (
+    <LanguageProvider>
+      <ThemeProvider><App /></ThemeProvider>
+    </LanguageProvider>
+  )
 }
 
 export default AppWithTheme
