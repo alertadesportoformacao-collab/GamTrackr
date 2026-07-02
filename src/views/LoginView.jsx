@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useLanguage } from '../LanguageContext'
 
 export default function LoginView({ onLogin, loginError }) {
-  const { t, lang, setLanguage, languages } = useLanguage()
+  const { t } = useLanguage()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword]     = useState('')
   const [loading, setLoading]       = useState(false)
@@ -64,27 +64,6 @@ export default function LoginView({ onLogin, loginError }) {
           </p>
         </div>
 
-        {/* Language selector */}
-        <div className="flex flex-wrap justify-center gap-1.5 mb-5">
-          {languages.map((l) => (
-            <button
-              key={l.code}
-              onClick={() => setLanguage(l.code)}
-              title={l.label}
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all"
-              style={{
-                background: lang === l.code ? 'rgba(14,165,233,0.2)' : 'var(--inp)',
-                color: lang === l.code ? '#38bdf8' : 'var(--tx4)',
-                border: `1px solid ${lang === l.code ? 'rgba(14,165,233,0.4)' : 'var(--bd)'}`,
-                cursor: 'pointer',
-              }}
-            >
-              <span>{l.flag}</span>
-              <span>{l.short}</span>
-            </button>
-          ))}
-        </div>
-
         {/* Card */}
         <div className="backdrop-blur-xl rounded-2xl p-8 shadow-2xl shadow-black/40"
           style={{ background: 'var(--inp)', border: '1px solid var(--bd)' }}>
@@ -93,7 +72,7 @@ export default function LoginView({ onLogin, loginError }) {
             <div>
               <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'var(--tx4)' }}>
-                {t('login.identifier')}
+                Email / Username
               </label>
               <input
                 type="text"
@@ -101,7 +80,7 @@ export default function LoginView({ onLogin, loginError }) {
                 onChange={(e) => setIdentifier(e.target.value)}
                 autoFocus
                 autoComplete="username"
-                placeholder={t('login.identifier_ph')}
+                placeholder="username or email@example.com"
                 className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
                 style={{
                   background: 'var(--inp)',
@@ -114,14 +93,14 @@ export default function LoginView({ onLogin, loginError }) {
             <div>
               <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'var(--tx4)' }}>
-                {t('login.password')}
+                Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder={t('login.password_ph')}
+                placeholder="••••••••"
                 className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
                 style={{
                   background: 'var(--inp)',
