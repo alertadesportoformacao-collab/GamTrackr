@@ -149,11 +149,11 @@ export default function AppShell({ profile, onLogout }) {
         style={{ background: 'var(--bg-s)', borderRight: '1px solid var(--bd)' }}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 flex-shrink-0"
-          style={{ height: 52, borderBottom: '1px solid var(--bd)' }}>
-          <img alt="GamTrakr" src="/gamtrakr-logo.png" style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
+        <div className="flex items-center justify-between flex-shrink-0"
+          style={{ height: 72, borderBottom: '1px solid var(--bd)', padding: '6px 8px 6px 8px' }}>
+          <img alt="GamTrakr" src="/gamtrakr-logo.png" style={{ flex: 1, minWidth: 0, height: '100%', objectFit: 'contain', objectPosition: 'left center' }} />
           <button onClick={() => setSidebarOpen(false)}
-            className="md:hidden hover:opacity-80 transition-opacity"
+            className="md:hidden hover:opacity-80 transition-opacity flex-shrink-0"
             style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
             <X size={18} />
           </button>
