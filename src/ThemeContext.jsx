@@ -2,8 +2,16 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const Ctx = createContext()
 
+const THEME_VERSION = 'v2'
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('gt-theme') || 'light')
+  const [theme, setTheme] = useState(() => {
+    if (localStorage.getItem('gt-theme-v') !== THEME_VERSION) {
+      localStorage.removeItem('gt-theme')
+      localStorage.setItem('gt-theme-v', THEME_VERSION)
+    }
+    return localStorage.getItem('gt-theme') || 'light'
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('light', theme === 'light')
