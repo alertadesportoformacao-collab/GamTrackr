@@ -229,17 +229,10 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                 {t('gt.sync_pending', pendingCount)}
               </span>
             )}
-            {gameStatus === 'finished' ? (
+            {gameStatus === 'finished' && (
               <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
                 {t('gt.status_finished')}
               </span>
-            ) : (
-              mode === 'realtime' && (
-                <button onClick={handleEndGame}
-                  style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
-                  {t('action.end_game')}
-                </button>
-              )
             )}
             <button onClick={onLogout} style={btnStyle}>{t('action.logout')}</button>
           </div>
@@ -305,6 +298,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                 </button>
               )
             })}
+
+            {/* Terminar Live */}
+            {gameStatus !== 'finished' && (
+              <>
+                <span style={{ flex: 1 }} />
+                <button onClick={handleEndGame}
+                  style={{ ...timerBtn, background: 'rgba(220,38,38,0.18)', border: '1px solid rgba(220,38,38,0.45)', color: '#fca5a5' }}>
+                  {t('action.end_game')}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
