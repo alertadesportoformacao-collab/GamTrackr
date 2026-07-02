@@ -72,7 +72,7 @@ export default function LoginView({ onLogin, loginError }) {
             <div>
               <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'var(--tx4)' }}>
-                Email / Username
+                {t('login.identifier')}
               </label>
               <input
                 type="text"
@@ -80,7 +80,7 @@ export default function LoginView({ onLogin, loginError }) {
                 onChange={(e) => setIdentifier(e.target.value)}
                 autoFocus
                 autoComplete="username"
-                placeholder="username or email@example.com"
+                placeholder={t('login.identifier_ph')}
                 className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
                 style={{
                   background: 'var(--inp)',
@@ -93,14 +93,14 @@ export default function LoginView({ onLogin, loginError }) {
             <div>
               <label className="block text-[0.68rem] font-bold uppercase tracking-widest mb-2"
                 style={{ color: 'var(--tx4)' }}>
-                Password
+                {t('login.password')}
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder={t('login.password_ph')}
                 className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
                 style={{
                   background: 'var(--inp)',

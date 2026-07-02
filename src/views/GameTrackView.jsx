@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
+import { useLanguage } from '../LanguageContext'
 import { db } from '../db'
 import '../game-track.css'
 
 export default function GameTrackView({ game, onBack, onLogout, isOnline, userRole, initialMode = 'realtime' }) {
+  const { t } = useLanguage()
+  const locale = t('locale')
   const [mode, setMode] = useState(initialMode)
   const [players, setPlayers] = useState([])
   const [periodoEvents, setPeriodoEvents] = useState([])
@@ -13,7 +16,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   const [registeredCounts, setRegisteredCounts] = useState({})
   const [pendingCount, setPendingCount] = useState(0)
 
-  // Períodos ativos: { [eventTypeId]: { startGameMinute, startWallTime } }
   const [activePeriods, setActivePeriods] = useState({})
   const [periodTick, setPeriodTick] = useState(0)
 
@@ -30,7 +32,6 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
 
   const isLocked = gameStatus === 'finished' && userRole === 'club_opp'
 
-  // Tick do cronómetro dos períodos (1×/seg quando há períodos ativos)
   useEffect(() => {
     if (Object.keys(activePeriods).length === 0) return
     const iv = setInterval(() => setPeriodTick((t) => t + 1), 1000)
@@ -43,12 +44,12 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       setYtVideoId(id)
       await supabase.from('games').update({ youtube_url: ytInput.trim() }).eq('id', game.id)
     } else {
-      alert('URL do YouTube inválido. Usa um link do tipo youtube.com/watch?v=... ou youtu.be/...')
+      alert(t('confirm.invalid_yt'))
     }
   }
 
   async function handleEndGame() {
-    if (!confirm('Encerrar o jogo? Os operadores deixarão de poder registar eventos ao vivo.')) return
+    if (!confirm(t('confirm.end_game'))) return
     const { error } = await supabase.from('games').update({ status: 'finished' }).eq('id', game.id)
     if (!error) setGameStatus('finished')
   }
@@ -209,38 +210,38 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       <div className="gt-header">
         <div className="gt-header-main">
           <div className="gt-header-left">
-            <button onClick={onBack} style={btnStyle}>← Voltar</button>
+            <button onClick={onBack} style={btnStyle}>{t('action.back')}</button>
             <div className="gt-title-block">
               <div className="gt-title">{game.escaloes?.name} vs {game.opponent}</div>
               <div className="gt-subtitle">
-                {new Date(game.game_date).toLocaleDateString('pt-PT')}
-                {mode === 'postmatch' && <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· Pós-Jogo</span>}
+                {new Date(game.game_date).toLocaleDateString(locale)}
+                {mode === 'postmatch' && <span style={{ marginLeft: '0.5rem', color: '#a78bfa', fontWeight: 700 }}>· {t('gt.post_match_tag')}</span>}
               </div>
             </div>
           </div>
 
           <div className="gt-header-right">
             <span style={{ fontSize: '0.72rem', color: isOnline ? '#4ade80' : '#f87171', fontWeight: 700 }}>
-              {isOnline ? '● Online' : '● Offline'}
+              {isOnline ? `● ${t('status.online')}` : `● ${t('status.offline')}`}
             </span>
             {pendingCount > 0 && (
               <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
-                {pendingCount} sync
+                {t('gt.sync_pending', pendingCount)}
               </span>
             )}
             {gameStatus === 'finished' ? (
               <span style={{ fontSize: '0.72rem', background: '#fee2e2', color: '#991b1b', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>
-                ⏹ Encerrado
+                {t('gt.status_finished')}
               </span>
             ) : (
               mode === 'realtime' && (
                 <button onClick={handleEndGame}
                   style={{ ...btnStyle, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fca5a5' }}>
-                  ⏹ Encerrar
+                  {t('action.end_game')}
                 </button>
               )
             )}
-            <button onClick={onLogout} style={btnStyle}>Sair</button>
+            <button onClick={onLogout} style={btnStyle}>{t('action.logout')}</button>
           </div>
         </div>
 
@@ -250,15 +251,15 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
             <div className="gt-timer-btns">
               {!isLocked && (timerState !== 'running'
                 ? <button onClick={startTimer} style={{ ...timerBtn, background: '#16a34a', color: 'white' }}>
-                    {timerState === 'paused' ? '▶ Retomar' : '▶ Iniciar'}
+                    {timerState === 'paused' ? t('action.resume_timer') : t('action.start_timer')}
                   </button>
                 : <button onClick={pauseTimer} style={{ ...timerBtn, background: '#d97706', color: 'white' }}>
-                    ⏸ Pausar
+                    {t('action.pause_timer')}
                   </button>
               )}
               {!isLocked && timerState !== 'stopped' && (
                 <button onClick={stopTimer} style={{ ...timerBtn, background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  ⏹ Parar
+                  {t('action.stop_timer')}
                 </button>
               )}
             </div>
@@ -268,13 +269,13 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
 
       {/* ── Aviso encerrado ── */}
       {isLocked && mode === 'realtime' && (
-        <div className="gt-lock-banner">Jogo encerrado — o registo de eventos está bloqueado.</div>
+        <div className="gt-lock-banner">{t('gt.lock_banner')}</div>
       )}
 
       {/* ── Períodos ── */}
       {mode === 'realtime' && periodoEvents.length > 0 && (
         <div className="gt-periodo-events">
-          <div className="gt-team-label">Períodos</div>
+          <div className="gt-team-label">{t('gt.periods')}</div>
           <div className="gt-periodo-btns">
             {periodoEvents.map((et) => {
               const active = activePeriods[et.id]
@@ -308,7 +309,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       {/* ── Eventos de equipa ── */}
       {mode === 'realtime' && teamEvents.length > 0 && (
         <div className="gt-team-events">
-          <div className="gt-team-label">Eventos de Equipa</div>
+          <div className="gt-team-label">{t('gt.team_events')}</div>
           <div className="gt-team-btns">
             {teamEvents.map((et) => {
               const count = registeredCounts[`null_${et.id}`] || 0
@@ -348,7 +349,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               onKeyDown={(e) => e.key === 'Enter' && applyYtUrl()}
               placeholder="https://www.youtube.com/watch?v=..." />
             <button onClick={applyYtUrl} style={{ ...btnStyle, background: '#1d4ed8', border: 'none', flexShrink: 0 }}>
-              Guardar
+              {t('action.save')}
             </button>
             {ytVideoId && (
               <button onClick={() => setYtCollapsed((c) => !c)} style={{ ...btnStyle, flexShrink: 0 }}>
@@ -357,7 +358,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
             )}
             {ytVideoId && (
               <button onClick={() => { setYtVideoId(null); setYtInput(''); supabase.from('games').update({ youtube_url: null }).eq('id', game.id) }}
-                style={{ ...btnStyle, flexShrink: 0 }} title="Remover vídeo">✕</button>
+                style={{ ...btnStyle, flexShrink: 0 }} title={t('gt.remove_video')}>✕</button>
             )}
           </div>
           {ytVideoId && !ytCollapsed && (
@@ -365,17 +366,17 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               <div className="gt-yt-ratio">
                 <iframe key={ytVideoId}
                   src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?rel=0&modestbranding=1`}
-                  title="Vídeo do jogo"
+                  title={t('gt.video_title')}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen />
               </div>
               <div className="gt-yt-fallback">
                 <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
-                  Se o vídeo não carregar, o dono desactivou o embedding —
+                  {t('gt.video_fallback')}
                 </span>
                 <a href={`https://www.youtube.com/watch?v=${ytVideoId}`} target="_blank" rel="noreferrer"
                   style={{ fontSize: '0.72rem', color: '#60a5fa', fontWeight: 600, textDecoration: 'none' }}>
-                  Abrir no YouTube ↗
+                  {t('action.open_youtube')}
                 </a>
               </div>
             </div>
@@ -387,13 +388,13 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       <div className="gt-grid">
         {activeEvents.length === 0 ? (
           <div style={{ color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '3rem 1rem', fontSize: '0.9rem' }}>
-            Sem eventos {mode === 'postmatch' ? 'pós-jogo' : 'em tempo real'} configurados.
+            {t('empty.events_configured', mode)}
           </div>
         ) : (
           <table className="gt-table">
             <thead>
               <tr style={{ background: 'rgba(0,0,0,0.35)' }}>
-                <th className="gt-col-event">Evento</th>
+                <th className="gt-col-event">{t('col.event')}</th>
                 {players.map((p) => (
                   <th key={p.id} className="gt-col-player">
                     <div className="gt-player-num">#{p.number}</div>

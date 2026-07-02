@@ -351,7 +351,7 @@ function ClubOppGames({ clubId, onSelectGame, t }) {
             <tbody>
               {games.map((g) => (
                 <tr key={g.id}>
-                  <td className="cell-muted">{new Date(g.game_date).toLocaleDateString('pt-PT')}</td>
+                  <td className="cell-muted">{new Date(g.game_date).toLocaleDateString(t('locale'))}</td>
                   <td className="cell-muted">{g.escaloes?.name}</td>
                   <td className="cell-primary">{g.opponent}</td>
                   <td className="col-center">

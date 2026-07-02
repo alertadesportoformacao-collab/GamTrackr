@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import Modal from '../components/Modal'
 import { uploadChunked } from '../utils/uploadChunked'
+import { useLanguage } from '../LanguageContext'
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -15,12 +16,13 @@ export function Field({ label, required, error, children }) {
   )
 }
 
-export function ModalFooter({ onCancel, onSave, saving, saveLabel = 'Guardar' }) {
+export function ModalFooter({ onCancel, onSave, saving, saveLabel }) {
+  const { t } = useLanguage()
   return (
     <div className="admin-form-footer" style={{ marginTop: '1.25rem' }}>
-      <button className="btn btn-secondary" onClick={onCancel}>Cancelar</button>
+      <button className="btn btn-secondary" onClick={onCancel}>{t('action.cancel')}</button>
       <button className="btn btn-primary" onClick={onSave} disabled={saving}>
-        {saving ? 'A guardar…' : saveLabel}
+        {saving ? t('action.saving') : (saveLabel ?? t('action.save'))}
       </button>
     </div>
   )
@@ -29,6 +31,7 @@ export function ModalFooter({ onCancel, onSave, saving, saveLabel = 'Guardar' })
 // ── Escalões ──────────────────────────────────────────────────────────────────
 
 export function EscaloesManager({ clubId }) {
+  const { t } = useLanguage()
   const [escaloes, setEscaloes] = useState([])
   const [modalities, setModalities] = useState([])
   const [open, setOpen] = useState(false)
@@ -52,8 +55,8 @@ export function EscaloesManager({ clubId }) {
 
   async function save() {
     const e = {}
-    if (!form.name.trim())  e.name        = 'Campo obrigatório'
-    if (!form.modality_id)  e.modality_id = 'Campo obrigatório'
+    if (!form.name.trim())  e.name        = t('error.required')
+    if (!form.modality_id)  e.modality_id = t('error.required')
     setErrors(e); if (Object.keys(e).length) return
     const payload = { name: form.name, modality_id: form.modality_id, club_id: clubId }
     editing
@@ -63,46 +66,50 @@ export function EscaloesManager({ clubId }) {
   }
 
   async function remove(id) {
-    if (!confirm('Eliminar escalão? Todos os jogadores e jogos associados serão eliminados.')) return
+    if (!confirm(t('confirm.delete_squad'))) return
     await supabase.from('escaloes').delete().eq('id', id); load()
   }
 
   return (
     <>
-      <Modal open={open} onClose={close} title={editing ? 'Editar escalão' : 'Novo escalão'} width={460}>
+      <Modal open={open} onClose={close} title={editing ? t('modal.edit_squad') : t('modal.new_squad')} width={460}>
         <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="Nome" required error={errors.name}>
+          <Field label={t('field.name')} required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Sub-17" />
           </Field>
-          <Field label="Modalidade" required error={errors.modality_id}>
+          <Field label={t('field.modality')} required error={errors.modality_id}>
             <select className={`admin-select${errors.modality_id ? ' input-error' : ''}`} value={form.modality_id}
               onChange={(e) => setForm({ ...form, modality_id: e.target.value })}>
-              <option value="">Selecionar…</option>
+              <option value="">{t('select.choose')}</option>
               {modalities.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           </Field>
         </div>
-        <ModalFooter onCancel={close} onSave={save} saveLabel={editing ? 'Guardar' : 'Adicionar'} />
+        <ModalFooter onCancel={close} onSave={save} saveLabel={editing ? t('action.save') : t('action.add')} />
       </Modal>
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title">Escalões</h2>
-          <button className="btn btn-sm btn-primary" onClick={openNew}>+ Novo</button>
+          <h2 className="admin-card-title">{t('page.escaloes')}</h2>
+          <button className="btn btn-sm btn-primary" onClick={openNew}>{t('action.new')}</button>
         </div>
-        {escaloes.length === 0 ? <div className="admin-empty">Ainda não há escalões registados.</div> : (
+        {escaloes.length === 0 ? <div className="admin-empty">{t('empty.squads')}</div> : (
           <div className="table-scroll">
             <table className="admin-table">
-              <thead><tr><th>Nome</th><th>Modalidade</th><th className="col-right">Ações</th></tr></thead>
+              <thead><tr>
+                <th>{t('field.name')}</th>
+                <th>{t('field.modality')}</th>
+                <th className="col-right">{t('label.actions')}</th>
+              </tr></thead>
               <tbody>
                 {escaloes.map((e) => (
                   <tr key={e.id}>
                     <td className="cell-primary">{e.name}</td>
                     <td className="cell-muted">{e.modalities?.name}</td>
                     <td className="col-actions">
-                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(e)}>Editar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => remove(e.id)}>Eliminar</button>
+                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(e)}>{t('action.edit')}</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => remove(e.id)}>{t('action.delete')}</button>
                     </td>
                   </tr>
                 ))}
@@ -120,6 +127,8 @@ export function EscaloesManager({ clubId }) {
 const EMPTY_PLAYER = { name: '', number: '', birth_date: '', escalao_superior: false, fpf_link: '', photo_url: '' }
 
 export function PlayersManager({ clubId }) {
+  const { t } = useLanguage()
+  const locale = t('locale')
   const [allPlayers, setAllPlayers] = useState([])
   const [escaloes, setEscaloes] = useState([])
   const [selectedEscalaoId, setSelectedEscalaoId] = useState('')
@@ -179,8 +188,8 @@ export function PlayersManager({ clubId }) {
 
   function validate() {
     const e = {}
-    if (!form.name.trim()) e.name = 'Campo obrigatório'
-    if (form.fpf_link && !/^https?:\/\/.+/.test(form.fpf_link.trim())) e.fpf_link = 'URL inválido'
+    if (!form.name.trim()) e.name = t('error.required')
+    if (form.fpf_link && !/^https?:\/\/.+/.test(form.fpf_link.trim())) e.fpf_link = t('error.invalid_url')
     setErrors(e); return !Object.keys(e).length
   }
 
@@ -213,7 +222,7 @@ export function PlayersManager({ clubId }) {
   }
 
   async function remove(id) {
-    if (!confirm('Eliminar jogador?')) return
+    if (!confirm(t('confirm.delete_player'))) return
     await supabase.from('players').delete().eq('id', id); loadAll()
   }
 
@@ -224,7 +233,7 @@ export function PlayersManager({ clubId }) {
 
   return (
     <>
-      <Modal open={open} onClose={close} title={editing ? `Editar — ${editing.name}` : 'Novo jogador'} width={600}>
+      <Modal open={open} onClose={close} title={editing ? t('modal.edit_player', editing.name) : t('modal.new_player')} width={600}>
         <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
           <div onClick={() => fileRef.current?.click()} style={{
             width: 88, height: 88, borderRadius: 10, flexShrink: 0,
@@ -237,15 +246,15 @@ export function PlayersManager({ clubId }) {
               : <span style={{ fontSize: '1.75rem', lineHeight: 1 }}>📷</span>}
           </div>
           <div style={{ flex: 1 }}>
-            <label className="admin-label">Foto do jogador</label>
+            <label className="admin-label">{t('field.player_photo')}</label>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoChange} />
             <div style={{ marginTop: '0.35rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-sm btn-secondary" onClick={() => fileRef.current?.click()}>
-                {photoPreview ? 'Alterar foto' : 'Escolher foto'}
+                {photoPreview ? t('action.change_photo') : t('action.choose_photo')}
               </button>
               {photoPreview && (
                 <button type="button" className="btn btn-sm btn-danger" onClick={() => { setPhotoFile(null); setPhotoPreview(null); setForm({ ...form, photo_url: '' }) }}>
-                  Remover
+                  {t('action.remove')}
                 </button>
               )}
             </div>
@@ -254,20 +263,20 @@ export function PlayersManager({ clubId }) {
                 <div style={{ height: '100%', width: `${photoProgress}%`, background: '#1d4ed8', borderRadius: 3, transition: 'width 0.2s' }} />
               </div>
             )}
-            <p style={{ margin: '0.4rem 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>JPEG, PNG ou WebP · máx. 5 MB</p>
+            <p style={{ margin: '0.4rem 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>{t('photo.hint')}</p>
           </div>
         </div>
 
         <div className="admin-form-grid" style={{ gridTemplateColumns: '72px 1fr 160px' }}>
-          <Field label="Nº">
+          <Field label={t('field.number')}>
             <input className="admin-input" type="number" min="0" value={form.number}
               onChange={(e) => setForm({ ...form, number: e.target.value })} placeholder="10" />
           </Field>
-          <Field label="Nome" required error={errors.name}>
+          <Field label={t('field.name')} required error={errors.name}>
             <input autoFocus={!editing} className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" />
           </Field>
-          <Field label="Data de nascimento">
+          <Field label={t('field.birth_date')}>
             <input className="admin-input" type="date" value={form.birth_date}
               onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
           </Field>
@@ -275,7 +284,7 @@ export function PlayersManager({ clubId }) {
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginTop: '0.75rem', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <Field label="Link biografia FPF" error={errors.fpf_link}>
+            <Field label={t('field.fpf_link')} error={errors.fpf_link}>
               <input className={`admin-input${errors.fpf_link ? ' input-error' : ''}`} type="url" value={form.fpf_link}
                 onChange={(e) => setForm({ ...form, fpf_link: e.target.value })} placeholder="https://www.fpf.pt/…" />
             </Field>
@@ -291,7 +300,7 @@ export function PlayersManager({ clubId }) {
               onChange={(e) => setForm({ ...form, escalao_superior: e.target.checked })}
               style={{ width: 15, height: 15, accentColor: '#ca8a04', cursor: 'pointer' }} />
             <span style={{ fontWeight: form.escalao_superior ? 700 : 500, color: form.escalao_superior ? '#92400e' : '#374151' }}>
-              Escalão superior
+              {t('field.upper_squad')}
             </span>
           </label>
         </div>
@@ -301,40 +310,39 @@ export function PlayersManager({ clubId }) {
             {saveError}
           </p>
         )}
-        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? 'Guardar' : 'Adicionar jogador'} />
+        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? t('action.save') : t('action.add_player')} />
       </Modal>
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title">Jogadores</h2>
+          <h2 className="admin-card-title">{t('page.players')}</h2>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <select className="admin-select" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}
               value={selectedEscalaoId} onChange={(e) => setSelectedEscalaoId(e.target.value)}>
-              <option value="">Todos os escalões</option>
+              <option value="">{t('select.all_squads')}</option>
               {escaloes.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
-            <button className="btn btn-sm btn-primary" onClick={openNew} disabled={!selectedEscalaoId}
-              title={!selectedEscalaoId ? 'Seleciona um escalão para adicionar' : ''}>
-              + Novo
+            <button className="btn btn-sm btn-primary" onClick={openNew} disabled={!selectedEscalaoId}>
+              {t('action.new')}
             </button>
           </div>
         </div>
 
-        {allPlayers.length === 0 ? <div className="admin-empty">Ainda não há jogadores registados.</div>
-          : players.length === 0 ? <div className="admin-empty">Nenhum jogador neste escalão.</div>
+        {allPlayers.length === 0 ? <div className="admin-empty">{t('empty.players_global')}</div>
+          : players.length === 0 ? <div className="admin-empty">{t('empty.players_squad')}</div>
           : (
             <div className="table-scroll">
               <table className="admin-table">
                 <thead>
                   <tr>
                     <th style={{ width: 42 }}></th>
-                    <th style={{ width: 44 }} className="col-center">Nº</th>
-                    <th>Nome</th>
-                    <th>Escalão</th>
-                    <th style={{ width: 110 }}>Nascimento</th>
-                    <th className="col-center" style={{ width: 70 }}>Esc. Sup.</th>
-                    <th style={{ width: 44 }} className="col-center">FPF</th>
-                    <th className="col-right">Ações</th>
+                    <th style={{ width: 44 }} className="col-center">{t('col.number')}</th>
+                    <th>{t('field.name')}</th>
+                    <th>{t('field.squad')}</th>
+                    <th style={{ width: 110 }}>{t('col.birth_date')}</th>
+                    <th className="col-center" style={{ width: 70 }}>{t('col.upper_squad')}</th>
+                    <th style={{ width: 44 }} className="col-center">{t('col.fpf')}</th>
+                    <th className="col-right">{t('label.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -349,11 +357,13 @@ export function PlayersManager({ clubId }) {
                       <td className="cell-primary">{p.name}</td>
                       <td className="cell-muted">{p.escaloes?.name || '—'}</td>
                       <td className="cell-muted">
-                        {p.birth_date ? <>{new Date(p.birth_date).toLocaleDateString('pt-PT')} <span style={{ color: '#cbd5e1' }}>({age(p.birth_date)}a)</span></> : '—'}
+                        {p.birth_date
+                          ? <>{new Date(p.birth_date).toLocaleDateString(locale)} <span style={{ color: '#cbd5e1' }}>{t('label.age', age(p.birth_date))}</span></>
+                          : '—'}
                       </td>
                       <td className="col-center">
                         {p.escalao_superior
-                          ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20 }}>Sim</span>
+                          ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20 }}>{t('badge.yes')}</span>
                           : <span style={{ color: '#cbd5e1' }}>—</span>}
                       </td>
                       <td className="col-center">
@@ -362,8 +372,8 @@ export function PlayersManager({ clubId }) {
                           : <span style={{ color: '#cbd5e1' }}>—</span>}
                       </td>
                       <td className="col-actions">
-                        <button className="btn btn-sm btn-secondary" onClick={() => openEdit(p)}>Editar</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => remove(p.id)}>Eliminar</button>
+                        <button className="btn btn-sm btn-secondary" onClick={() => openEdit(p)}>{t('action.edit')}</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => remove(p.id)}>{t('action.delete')}</button>
                       </td>
                     </tr>
                   ))}
@@ -381,6 +391,8 @@ export function PlayersManager({ clubId }) {
 const EMPTY_GAME = { escalao_id: '', opponent: '', game_date: '', status: 'active', youtube_url: '' }
 
 export function GamesManager({ clubId, onSelectGame }) {
+  const { t } = useLanguage()
+  const locale = t('locale')
   const [games, setGames] = useState([])
   const [escaloes, setEscaloes] = useState([])
   const [open, setOpen] = useState(false)
@@ -405,9 +417,9 @@ export function GamesManager({ clubId, onSelectGame }) {
 
   async function save() {
     const e = {}
-    if (!form.escalao_id)      e.escalao_id = 'Campo obrigatório'
-    if (!form.opponent.trim()) e.opponent   = 'Campo obrigatório'
-    if (!form.game_date)       e.game_date  = 'Campo obrigatório'
+    if (!form.escalao_id)      e.escalao_id = t('error.required')
+    if (!form.opponent.trim()) e.opponent   = t('error.required')
+    if (!form.game_date)       e.game_date  = t('error.required')
     setErrors(e); if (Object.keys(e).length) return
     const payload = { escalao_id: form.escalao_id, opponent: form.opponent, game_date: form.game_date, youtube_url: form.youtube_url || null }
     editing
@@ -417,73 +429,73 @@ export function GamesManager({ clubId, onSelectGame }) {
   }
 
   async function remove(id) {
-    if (!confirm('Eliminar jogo?')) return
+    if (!confirm(t('confirm.delete_game'))) return
     await supabase.from('games').delete().eq('id', id); init()
   }
 
   return (
     <>
-      <Modal open={open} onClose={close} title={editing ? 'Editar jogo' : 'Novo jogo'} width={500}>
+      <Modal open={open} onClose={close} title={editing ? t('modal.edit_game') : t('modal.new_game')} width={500}>
         <div className="admin-form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          <Field label="Escalão" required error={errors.escalao_id}>
+          <Field label={t('field.squad')} required error={errors.escalao_id}>
             <select className={`admin-select${errors.escalao_id ? ' input-error' : ''}`} value={form.escalao_id}
               onChange={(e) => setForm({ ...form, escalao_id: e.target.value })}>
-              <option value="">Selecionar…</option>
+              <option value="">{t('select.choose')}</option>
               {escaloes.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
           </Field>
-          <Field label="Data" required error={errors.game_date}>
+          <Field label={t('label.date')} required error={errors.game_date}>
             <input className={`admin-input${errors.game_date ? ' input-error' : ''}`} type="date" value={form.game_date}
               onChange={(e) => setForm({ ...form, game_date: e.target.value })} />
           </Field>
           <div style={{ gridColumn: '1 / -1' }}>
-            <Field label="Adversário" required error={errors.opponent}>
+            <Field label={t('label.opponent')} required error={errors.opponent}>
               <input autoFocus className={`admin-input${errors.opponent ? ' input-error' : ''}`} value={form.opponent}
                 onChange={(e) => setForm({ ...form, opponent: e.target.value })} placeholder="Ex: FC Porto" />
             </Field>
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <Field label="URL YouTube (opcional)">
+            <Field label={t('field.youtube_url')}>
               <input className="admin-input" value={form.youtube_url}
                 onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
                 placeholder="https://www.youtube.com/watch?v=..." />
             </Field>
           </div>
         </div>
-        <ModalFooter onCancel={close} onSave={save} saveLabel={editing ? 'Guardar' : 'Adicionar'} />
+        <ModalFooter onCancel={close} onSave={save} saveLabel={editing ? t('action.save') : t('action.add')} />
       </Modal>
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title">Jogos</h2>
-          <button className="btn btn-sm btn-primary" onClick={openNew}>+ Novo</button>
+          <h2 className="admin-card-title">{t('page.games')}</h2>
+          <button className="btn btn-sm btn-primary" onClick={openNew}>{t('action.new')}</button>
         </div>
-        {games.length === 0 ? <div className="admin-empty">Ainda não há jogos registados.</div> : (
+        {games.length === 0 ? <div className="admin-empty">{t('empty.games')}</div> : (
           <div className="table-scroll">
             <table className="admin-table">
               <thead><tr>
-                <th style={{ width: 110 }}>Data</th>
-                <th>Escalão</th>
-                <th>Adversário</th>
-                <th className="col-center" style={{ width: 100 }}>Estado</th>
-                <th className="col-right">Ações</th>
+                <th style={{ width: 110 }}>{t('label.date')}</th>
+                <th>{t('field.squad')}</th>
+                <th>{t('label.opponent')}</th>
+                <th className="col-center" style={{ width: 100 }}>{t('label.status')}</th>
+                <th className="col-right">{t('label.actions')}</th>
               </tr></thead>
               <tbody>
                 {games.map((g) => (
                   <tr key={g.id}>
-                    <td className="cell-muted">{new Date(g.game_date).toLocaleDateString('pt-PT')}</td>
+                    <td className="cell-muted">{new Date(g.game_date).toLocaleDateString(locale)}</td>
                     <td className="cell-muted">{g.escaloes?.name}</td>
                     <td className="cell-primary">{g.opponent}</td>
                     <td className="col-center">
                       {g.status === 'finished'
-                        ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 10px', borderRadius: 20 }}>Encerrado</span>
-                        : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: 20 }}>Activo</span>}
+                        ? <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 10px', borderRadius: 20 }}>{t('status.finished')}</span>
+                        : <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: 20 }}>{t('status.active')}</span>}
                     </td>
                     <td className="col-actions">
-                      <button className="btn btn-sm btn-success" onClick={() => onSelectGame(g)}>▶ Registar</button>
-                      <button className="btn btn-sm" style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }} onClick={() => onSelectGame(g, 'postmatch')}>📊 Pós-Jogo</button>
-                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(g)}>Editar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => remove(g.id)}>Eliminar</button>
+                      <button className="btn btn-sm btn-success" onClick={() => onSelectGame(g)}>{t('action.register')}</button>
+                      <button className="btn btn-sm" style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd' }} onClick={() => onSelectGame(g, 'postmatch')}>{t('action.post_match')}</button>
+                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(g)}>{t('action.edit')}</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => remove(g.id)}>{t('action.delete')}</button>
                     </td>
                   </tr>
                 ))}
@@ -499,6 +511,7 @@ export function GamesManager({ clubId, onSelectGame }) {
 // ── Operadores ────────────────────────────────────────────────────────────────
 
 export function OperadoresManager({ clubId }) {
+  const { t } = useLanguage()
   const [users, setUsers] = useState([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -528,13 +541,13 @@ export function OperadoresManager({ clubId }) {
 
   function validate() {
     const e = {}
-    if (!form.name.trim())  e.name  = 'Campo obrigatório'
-    if (!form.email.trim()) e.email = 'Campo obrigatório'
+    if (!form.name.trim())  e.name  = t('error.required')
+    if (!form.email.trim()) e.email = t('error.required')
     if (!editing) {
-      if (!form.password.trim()) e.password = 'Campo obrigatório'
-      else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
+      if (!form.password.trim()) e.password = t('error.required')
+      else if (form.password.length < 6) e.password = t('error.min_6_chars')
     } else if (form.password && form.password.length < 6) {
-      e.password = 'Mínimo 6 caracteres'
+      e.password = t('error.min_6_chars')
     }
     setErrors(e); return !Object.keys(e).length
   }
@@ -557,44 +570,45 @@ export function OperadoresManager({ clubId }) {
   }
 
   async function remove(userId) {
-    if (!confirm('Eliminar operador? Esta ação é irreversível.')) return
+    if (!confirm(t('confirm.delete_operator'))) return
     await supabase.functions.invoke('delete-user', { body: { userId } }); load()
   }
 
   return (
     <>
-      <Modal open={open} onClose={close} title={editing ? 'Editar operador' : 'Novo operador'} width={480}>
+      <Modal open={open} onClose={close} title={editing ? t('modal.edit_operator') : t('modal.new_operator')} width={480}>
         <div className="admin-form-grid">
-          <Field label="Nome" required error={errors.name}>
+          <Field label={t('field.name')} required error={errors.name}>
             <input autoFocus className={`admin-input${errors.name ? ' input-error' : ''}`} value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nome completo" />
           </Field>
-          <Field label="Email" required error={errors.email}>
+          <Field label={t('field.email')} required error={errors.email}>
             <input className={`admin-input${errors.email ? ' input-error' : ''}`} type="email" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="operador@exemplo.com" />
           </Field>
-          <Field label={editing ? 'Nova password' : 'Password'} required={!editing} error={errors.password}>
+          <Field label={editing ? t('field.new_password') : t('login.password')} required={!editing} error={errors.password}>
             <input className={`admin-input${errors.password ? ' input-error' : ''}`} type="password" value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder={editing ? 'Deixar vazio para não alterar' : 'Mínimo 6 caracteres'} />
+              placeholder={editing ? t('field.leave_blank') : t('error.min_6_chars')} />
           </Field>
         </div>
         {apiError && <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#dc2626', background: '#fee2e2', padding: '0.5rem 0.75rem', borderRadius: 6 }}>{apiError}</p>}
-        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? 'Guardar' : 'Criar operador'} />
+        <ModalFooter onCancel={close} onSave={save} saving={saving} saveLabel={editing ? t('action.save') : t('action.create_operator')} />
       </Modal>
 
       <div className="admin-card">
         <div className="admin-card-header">
-          <h2 className="admin-card-title">Operadores do Clube</h2>
-          <button className="btn btn-sm btn-primary" onClick={openNew}>+ Novo</button>
+          <h2 className="admin-card-title">{t('page.operators')}</h2>
+          <button className="btn btn-sm btn-primary" onClick={openNew}>{t('action.new')}</button>
         </div>
-        {users.length === 0 ? <div className="admin-empty">Ainda não há operadores registados.</div> : (
+        {users.length === 0 ? <div className="admin-empty">{t('empty.operators')}</div> : (
           <div className="table-scroll">
             <table className="admin-table">
               <thead><tr>
-                <th>Nome</th><th>Email</th>
-                <th className="col-center">Pode Abrir Jogos</th>
-                <th className="col-right">Ações</th>
+                <th>{t('field.name')}</th>
+                <th>{t('field.email')}</th>
+                <th className="col-center">{t('field.can_open_games')}</th>
+                <th className="col-right">{t('label.actions')}</th>
               </tr></thead>
               <tbody>
                 {users.map((u) => (
@@ -608,12 +622,12 @@ export function OperadoresManager({ clubId }) {
                         border: 'none', borderRadius: 20,
                         padding: '3px 14px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
                       }}>
-                        {u.can_open_games ? 'Sim' : 'Não'}
+                        {u.can_open_games ? t('badge.yes') : t('badge.no')}
                       </button>
                     </td>
                     <td className="col-actions">
-                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(u)}>Editar</button>
-                      <button className="btn btn-sm btn-danger" onClick={() => remove(u.id)}>Eliminar</button>
+                      <button className="btn btn-sm btn-secondary" onClick={() => openEdit(u)}>{t('action.edit')}</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => remove(u.id)}>{t('action.delete')}</button>
                     </td>
                   </tr>
                 ))}
