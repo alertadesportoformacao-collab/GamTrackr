@@ -3,8 +3,9 @@
 /* ── Container ── */
 .gt-wrap {
   height: 100vh;
-  height: 100dvh; /* dinâmico: exclui barra do browser em mobile */
-  background: #0f2744;
+  height: 100dvh;
+  background: var(--bg);
+  color: var(--tx);
   display: flex;
   flex-direction: column;
   font-family: Inter, system-ui, sans-serif;
@@ -13,9 +14,9 @@
 
 /* ── Header ── */
 .gt-header {
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid var(--bd);
   flex-shrink: 0;
-  background: rgba(0,0,0,0.25);
+  background: var(--bg-s);
 }
 
 .gt-header-main {
@@ -24,14 +25,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-}
-
-.gt-header-timer {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.2rem 1rem 0.35rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
 }
 
 .gt-header-left {
@@ -48,7 +41,7 @@
 }
 
 .gt-title {
-  color: white;
+  color: var(--tx);
   font-weight: 700;
   font-size: 0.95rem;
   letter-spacing: -0.01em;
@@ -58,7 +51,7 @@
 }
 
 .gt-subtitle {
-  color: rgba(255,255,255,0.45);
+  color: var(--tx4);
   font-size: 0.72rem;
   white-space: nowrap;
   overflow: hidden;
@@ -101,8 +94,8 @@
 
 /* ── Períodos ── */
 .gt-periodo-events {
-  background: rgba(0,0,0,0.3);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-s);
+  border-bottom: 1px solid var(--bd);
   padding: 0.55rem 1rem;
   flex-shrink: 0;
 }
@@ -111,6 +104,7 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .gt-periodo-btn {
@@ -119,7 +113,7 @@
   gap: 0.5rem;
   border-radius: 8px;
   padding: 0.45rem 1rem;
-  color: white;
+  color: var(--tx);
   font-weight: 700;
   font-size: 0.85rem;
   min-height: 40px;
@@ -136,12 +130,13 @@
   background: rgba(0,0,0,0.3);
   padding: 1px 8px;
   border-radius: 10px;
+  color: white;
 }
 
 /* ── Eventos de equipa ── */
 .gt-team-events {
-  background: rgba(0,0,0,0.25);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: var(--bg-s);
+  border-bottom: 1px solid var(--bd);
   padding: 0.6rem 1rem;
   flex-shrink: 0;
 }
@@ -151,7 +146,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  color: rgba(255,255,255,0.4);
+  color: var(--tx4);
   margin-bottom: 0.45rem;
 }
 
@@ -178,17 +173,17 @@
 .gt-col-event {
   position: sticky;
   left: 0;
-  background: #0a1e38;
+  background: var(--bg);
   text-align: left;
   padding: 5px 10px;
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: rgba(255,255,255,0.4);
+  color: var(--tx4);
   white-space: nowrap;
   min-width: 120px;
-  border-right: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid var(--bd);
   z-index: 2;
 }
 
@@ -198,14 +193,14 @@
   font-size: 0.68rem;
   min-width: 56px;
   text-align: center;
-  color: rgba(255,255,255,0.6);
+  color: var(--tx3);
   font-weight: 600;
-  border-right: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid var(--bd2);
 }
 
 .gt-player-num {
   font-weight: 800;
-  color: white;
+  color: var(--tx);
   font-size: 0.8rem;
 }
 
@@ -224,9 +219,8 @@
   font-weight: 600;
   font-size: 0.78rem;
   white-space: nowrap;
-  color: rgba(255,255,255,0.88);
-  border-right: 1px solid rgba(255,255,255,0.08);
-  /* background é inline (por linha) */
+  color: var(--tx2);
+  border-right: 1px solid var(--bd2);
   position: sticky;
   left: 0;
   z-index: 1;
@@ -236,7 +230,7 @@
 .gt-cell {
   padding: 3px;
   text-align: center;
-  border-right: 1px solid rgba(255,255,255,0.04);
+  border-right: 1px solid var(--bd2);
 }
 
 .gt-event-btn {
@@ -246,14 +240,14 @@
   font-weight: 800;
   cursor: pointer;
   transition: background 0.1s, opacity 0.1s;
-  touch-action: manipulation; /* evita zoom duplo toque em iOS */
+  touch-action: manipulation;
   user-select: none;
 }
 
 /* ── YouTube panel ── */
 .gt-yt-panel {
-  background: rgba(0,0,0,0.4);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-s);
+  border-bottom: 1px solid var(--bd);
   flex-shrink: 0;
 }
 
@@ -266,11 +260,11 @@
 
 .gt-yt-input {
   flex: 1;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: var(--inp);
+  border: 1px solid var(--bd3);
   border-radius: 6px;
   padding: 0.38rem 0.75rem;
-  color: white;
+  color: var(--tx);
   font-size: 0.82rem;
   outline: none;
   font-family: inherit;
@@ -308,13 +302,11 @@
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 
-/* Tablet pequeno / mobile landscape */
 @media (max-width: 768px) {
   .gt-col-event  { min-width: 110px; }
   .gt-col-player { min-width: 54px; }
 }
 
-/* Mobile portrait */
 @media (max-width: 600px) {
   .gt-header-main { padding: 0.4rem 0.75rem; gap: 0.35rem; }
   .gt-periodo-events { padding: 0.4rem 0.75rem; }
@@ -328,17 +320,15 @@
 
   .gt-timer-value { font-size: 1.1rem; }
 
-  /* Grid mais compacto */
   .gt-col-event  { min-width: 82px; padding: 4px 7px; font-size: 0.58rem; }
   .gt-col-player { min-width: 42px; padding: 4px 1px; }
   .gt-player-num { font-size: 0.72rem; }
-  .gt-player-name { display: none; } /* número basta em mobile */
+  .gt-player-name { display: none; }
   .gt-row-event  { padding: 1px 7px; font-size: 0.7rem; }
   .gt-cell       { padding: 2px; }
   .gt-event-btn  { min-height: 34px; border-radius: 4px; }
 }
 
-/* Mobile muito pequeno */
 @media (max-width: 390px) {
   .gt-col-event  { min-width: 70px; padding: 3px 5px; }
   .gt-col-player { min-width: 36px; }

@@ -254,7 +254,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
   }
 
   const activeEvents = mode === 'realtime' ? playerEvents : postMatchEvents
-  const timerColor = timerState === 'running' ? '#4ade80' : timerState === 'paused' ? '#fbbf24' : 'rgba(255,255,255,0.5)'
+  const timerColor = timerState === 'running' ? '#4ade80' : timerState === 'paused' ? '#fbbf24' : 'var(--tx4)'
 
   return (
     <div className="gt-wrap">
@@ -278,7 +278,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               {isOnline ? `● ${t('status.online')}` : `● ${t('status.offline')}`}
             </span>
             {pendingCount > 0 && (
-              <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
+              <span style={{ fontSize: '0.68rem', background: 'rgba(251,191,36,0.2)', color: '#d97706', padding: '2px 8px', borderRadius: 20, fontWeight: 700 }}>
                 {t('gt.sync_pending', pendingCount)}
               </span>
             )}
@@ -317,7 +317,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
 
             {/* Separador visual */}
             {periodoEvents.length > 0 && (
-              <span style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,0.15)', margin: '0 0.25rem', flexShrink: 0 }} />
+              <span style={{ width: 1, alignSelf: 'stretch', background: 'var(--bd3)', margin: '0 0.25rem', flexShrink: 0 }} />
             )}
 
             {/* Botões de período */}
@@ -329,8 +329,9 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                 <button key={et.id} onClick={() => togglePeriodo(et)} disabled={isLocked}
                   className="gt-periodo-btn"
                   style={{
-                    background: active ? et.color : 'rgba(255,255,255,0.07)',
-                    border: `2px solid ${active ? et.color : 'rgba(255,255,255,0.18)'}`,
+                    background: active ? et.color : 'var(--bg-e)',
+                    border: `2px solid ${active ? et.color : 'var(--bd3)'}`,
+                    color: active ? 'white' : undefined,
                     opacity: isLocked ? 0.45 : 1,
                     cursor: isLocked ? 'not-allowed' : 'pointer',
                   }}>
@@ -338,7 +339,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                   {active
                     ? <span className="gt-periodo-timer">{formatTime(secs)}</span>
                     : count > 0 && (
-                      <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: '0 6px', fontSize: '0.78rem' }}>
+                      <span style={{ background: 'var(--sub)', borderRadius: 10, padding: '0 6px', fontSize: '0.78rem' }}>
                         {count}×
                       </span>
                     )
@@ -371,9 +372,9 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               return (
                 <button key={et.id} onClick={() => registerEvent(null, et)} disabled={isLocked}
                   style={{
-                    background: count > 0 ? et.color : 'rgba(255,255,255,0.08)',
-                    color: 'white',
-                    border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.15)'}`,
+                    background: count > 0 ? et.color : 'var(--bg-e)',
+                    color: count > 0 ? 'white' : 'var(--tx)',
+                    border: `2px solid ${count > 0 ? et.color : 'var(--bd3)'}`,
                     borderRadius: 8, padding: '0.4rem 0.85rem',
                     cursor: isLocked ? 'not-allowed' : 'pointer',
                     fontWeight: 700, fontSize: '0.82rem',
@@ -426,7 +427,7 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                   allowFullScreen />
               </div>
               <div className="gt-yt-fallback">
-                <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--tx4)' }}>
                   {t('gt.video_fallback')}
                 </span>
                 <a href={`https://www.youtube.com/watch?v=${ytVideoId}`} target="_blank" rel="noreferrer"
@@ -442,13 +443,13 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
       {/* ── Grelha jogador × evento ── */}
       <div className="gt-grid">
         {activeEvents.length === 0 ? (
-          <div style={{ color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '3rem 1rem', fontSize: '0.9rem' }}>
+          <div style={{ color: 'var(--tx4)', textAlign: 'center', padding: '3rem 1rem', fontSize: '0.9rem' }}>
             {t('empty.events_configured', mode)}
           </div>
         ) : (
           <table className="gt-table">
             <thead>
-              <tr style={{ background: 'rgba(0,0,0,0.35)' }}>
+              <tr style={{ background: 'var(--bg-e)' }}>
                 <th className="gt-col-event">{t('col.event')}</th>
                 {players.map((p) => (
                   <th key={p.id} className="gt-col-player">
@@ -462,8 +463,8 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
               {activeEvents.map((et, rowIdx) => {
                 const evenBg = rowIdx % 2 === 0
                 return (
-                  <tr key={et.id} style={{ background: evenBg ? 'rgba(255,255,255,0.025)' : 'transparent' }}>
-                    <td className="gt-row-event" style={{ background: evenBg ? '#122b4a' : '#0f2744' }}>
+                  <tr key={et.id} style={{ background: evenBg ? 'var(--sub2)' : 'transparent' }}>
+                    <td className="gt-row-event" style={{ background: evenBg ? 'var(--bg-s)' : 'var(--bg)' }}>
                       <span style={{ width: 9, height: 9, borderRadius: '50%', background: et.color, display: 'inline-block', marginRight: 7, verticalAlign: 'middle' }} />
                       {et.name}
                     </td>
@@ -473,9 +474,9 @@ export default function GameTrackView({ game, onBack, onLogout, isOnline, userRo
                         <td key={p.id} className="gt-cell">
                           <button className="gt-event-btn" onClick={() => registerEvent(p, et)} disabled={isLocked}
                             style={{
-                              background: count > 0 ? et.color : 'rgba(255,255,255,0.06)',
-                              color: count > 0 ? 'white' : 'rgba(255,255,255,0.25)',
-                              border: `2px solid ${count > 0 ? et.color : 'rgba(255,255,255,0.08)'}`,
+                              background: count > 0 ? et.color : 'var(--sub)',
+                              color: count > 0 ? 'white' : 'var(--tx5)',
+                              border: `2px solid ${count > 0 ? et.color : 'var(--bd)'}`,
                               fontSize: count > 0 ? '1.05rem' : '0.7rem',
                               cursor: isLocked ? 'not-allowed' : 'pointer',
                               opacity: isLocked ? 0.45 : 1,
@@ -513,9 +514,9 @@ function extractYouTubeId(url) {
 }
 
 const btnStyle = {
-  background: 'rgba(255,255,255,0.1)',
-  border: '1px solid rgba(255,255,255,0.18)',
-  color: 'white', borderRadius: 6,
+  background: 'var(--bg-e)',
+  border: '1px solid var(--bd3)',
+  color: 'var(--tx)', borderRadius: 6,
   padding: '0.32rem 0.7rem',
   cursor: 'pointer', fontSize: '0.82rem',
   fontWeight: 600, whiteSpace: 'nowrap',
