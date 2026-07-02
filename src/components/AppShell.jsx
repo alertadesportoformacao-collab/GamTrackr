@@ -230,7 +230,7 @@ export default function AppShell({ profile, onLogout }) {
         {/* Header */}
         <header className="flex items-center justify-between px-4 md:px-6 backdrop-blur-sm flex-shrink-0"
           style={{
-            height: 116,
+            height: 48,
             background: dark ? 'rgba(12,21,37,0.85)' : 'rgba(255,255,255,0.9)',
             borderBottom: '1px solid var(--bd)',
           }}>
