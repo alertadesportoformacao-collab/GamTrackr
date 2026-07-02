@@ -56,8 +56,8 @@ export default function LoginView({ onLogin, loginError }) {
           <img
             src="/gamtrakr-logo.png"
             alt="GamTrakr"
-            className="mx-auto mb-2 drop-shadow-[0_0_32px_rgba(56,189,248,0.35)]"
-            style={{ maxHeight: 400, width: 'auto' }}
+            className="mx-auto mb-2"
+            style={{ maxWidth: 280, width: '100%', height: 'auto' }}
           />
           <p className="mt-3 text-sm font-medium tracking-wide" style={{ color: 'var(--tx4)' }}>
             {t('login.subtitle')}
