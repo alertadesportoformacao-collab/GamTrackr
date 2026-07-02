@@ -149,9 +149,9 @@ export default function AppShell({ profile, onLogout }) {
         style={{ background: 'var(--bg-s)', borderRight: '1px solid var(--bd)' }}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-2 flex-shrink-0"
-          style={{ borderBottom: '1px solid var(--bd)' }}>
-          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ height: 100, width: 'auto', maxWidth: 204 }} />
+        <div className="flex items-center justify-between px-4 flex-shrink-0"
+          style={{ height: 52, borderBottom: '1px solid var(--bd)' }}>
+          <img src="/gamtrakr-logo.png" alt="GamTrakr" style={{ height: 36, width: 'auto', maxWidth: 204 }} />
           <button onClick={() => setSidebarOpen(false)}
             className="md:hidden hover:opacity-80 transition-opacity"
             style={{ color: 'var(--tx4)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
@@ -230,7 +230,7 @@ export default function AppShell({ profile, onLogout }) {
         {/* Header */}
         <header className="flex items-center justify-between px-4 md:px-6 backdrop-blur-sm flex-shrink-0"
           style={{
-            height: 48,
+            height: 52,
             background: dark ? 'rgba(12,21,37,0.85)' : 'rgba(255,255,255,0.9)',
             borderBottom: '1px solid var(--bd)',
           }}>
